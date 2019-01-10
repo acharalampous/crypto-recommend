@@ -8,13 +8,14 @@
 /********************************/
 #pragma once
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
+#define ALPHA 15
 /* Implemenention of the classes that will be used to represent cryptocurrencies,
  * tweets and users. 
  */
-
 
 /** cryptocurrencies **/
 class cryptocurrency{
@@ -53,6 +54,9 @@ class tweet{
         float get_sentiment();
         std::string& get_data();
         std::unordered_set<int>* get_cryptos();
+
+        void eval_sentiment(std::vector<cryptocurrency*>&, std::unordered_map<std::string, cryptocurrency*>&, 
+                            std::unordered_map<std::string, float>&);
 };
 
 /** user **/
@@ -72,4 +76,6 @@ class user{
         std::vector<float>* get_sentiments();
         std::vector<int>* get_tweets();
         std::unordered_set<int>* get_cryptos();
+
+        void add_tweet(int); // add to user the given tweet's index
 };

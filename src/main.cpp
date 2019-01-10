@@ -3,51 +3,25 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+
+#include "rService.h"
 #include "tweet.h"
+
 using namespace std;
 
 int main(void){
     ifstream cc("files/coins_queries.csv");
-    string line;
-    int i = 0;
-    vector<cryptocurrency*> cryptos;
-    unordered_map<string, cryptocurrency*> map;
-    while(getline(cc, line)){
-        //cout << line << endl;
-        if (line[line.size() - 1] == '\r')
-            line.erase(line.size() - 1);
+    ifstream lxc("files/vader_lexicon.csv");
+    ifstream tweets("files/tweets_dataset_small.csv");
+    
+    r_service* recsys = new r_service;
 
-        size_t pos, prev = 0;
+    recsys->register_cryptos(cc);
+    recsys->register_words(lxc);
+    recsys->register_tweets(tweets);
 
-        int j = 0;
-        string tag;
-        while ((pos = line.find_first_of("\t,", prev)) != string::npos)
-        {
-            if (pos > prev){
-                tag = line.substr(prev, pos - prev);
-                if(j == 0){
-                    cryptos.push_back(new cryptocurrency(tag, i));
-                }
-                else if(j == 4){
-                    cryptos[i]->set_name(tag);
-                }
-                map[tag] = cryptos[i];
-            }
-            prev = pos + 1;
-            j++;
-        }
-        
-        if (prev < line.length()){
-            tag = line.substr(prev, string::npos);
-            if(j == 0){
-                cryptos.push_back(new cryptocurrency(tag, i));
-            }
-            else if(j == 4){
-                cryptos[i]->set_name(tag);
-            }
-            map[tag] = cryptos[i];
-        }
-        i++;
-    }
+    unordered_map<string, float>* lex = recsys->get_lexicon();
+
+    cout << (*lex)["good"] << endl;
     cout << "h" << endl;
 }
