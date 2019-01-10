@@ -20,8 +20,13 @@ int main(void){
     recsys->register_words(lxc);
     recsys->register_tweets(tweets);
 
-    unordered_map<string, float>* lex = recsys->get_lexicon();
+    recsys->eval_users();
 
-    cout << (*lex)["good"] << endl;
-    cout << "h" << endl;
+
+    cout << "Deleting Everything" << endl;
+    delete recsys;
+
+    
+    cout << "Program exiting with exit code 0" << endl;
+    return 0;
 }

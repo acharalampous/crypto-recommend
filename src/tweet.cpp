@@ -49,8 +49,9 @@ void cryptocurrency::set_name(string new_name){
 /////////////
 /** TWEET **/
 /////////////
-tweet::tweet(int tweet_id, string data){
+tweet::tweet(int tweet_id, int tweet_index, string data){
     this->tweet_id = tweet_id;
+    this->tweet_index = tweet_index;
     this->totalscore = 0.0;
     this->sentiment = 0.0;
     this->data = data;
@@ -168,4 +169,30 @@ std::unordered_set<int>* user::get_cryptos(){
 
 void user::add_tweet(int t_index){
     this->tweets->push_back(t_index);
+}
+
+void user::eval_sentiment(std::vector<tweet*>& tweets, std::vector<cryptocurrency*>& cryptos){
+    
+    /* Initialize all cryptocurrencies's sentiment as 0.0 */
+    for(unsigned int i = 0; i < cryptos.size(); i++){
+        this->sentiments->push_back(0.0);
+    }
+
+    /* Get sentiments from all evaluated tweets */
+    tweet* cur_tweet = NULL;
+    for(unsigned int i = 0; i < this->tweets->size(); i++){
+        cur_tweet = tweets.at((this->tweets->at(i))); // fetch tweet
+
+        /* Get all cryptos referenced in current tweet */
+        unordered_set<int>* tweet_cryptos = cur_tweet->get_cryptos();
+        float t_sentiment = cur_tweet->get_sentiment();
+        
+        /* For each cryptocurrency in tweet, add to equivalent sentiment of user */
+        for(unordered_set<int>::iterator it = tweet_cryptos->begin(); it != tweet_cryptos->end(); it++){
+            /* Get cryptocurrency index and add to user's cc sentiment */
+            int cc_index = *it; 
+            this->sentiments->at(cc_index) += t_sentiment;
+            this->cryptos->insert(cc_index); // save cc in user referenced cryptos)
+        }
+    }
 }

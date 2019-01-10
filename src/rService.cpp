@@ -30,11 +30,23 @@ r_service::r_service(){
 }
 
 r_service::~r_service(){
+    /* Destroy all users */
+    for(unsigned int i = 0; i < users->size(); i++)
+        delete users->at(i);
     delete this->users;
+    
+    /* Destroy all tweets */
+    for(unsigned int i = 0; i < tweets->size(); i++)
+        delete tweets->at(i);
     delete this->tweets;
-    delete this->cryptos;
+
     delete this->crypto_tags;
     delete this->lexicon;
+
+    /* Destroy all cryptos */
+    for(unsigned int i = 0; i < cryptos->size(); i++)
+        delete cryptos->at(i);
+    delete this->cryptos;
 }
 
 vector<cryptocurrency*>* r_service::get_cryptos(){
@@ -131,6 +143,8 @@ void r_service::register_tweets(ifstream& tweets){
     string t_content; // tweet content
     user* cur_user = NULL;
 
+
+    unsigned int t_index = 0; // tweet index in container
     /* Scan whole file and store every tweet found */
     while(getline(tweets, line)){
         size_t prev = 0, pos;
@@ -161,10 +175,20 @@ void r_service::register_tweets(ifstream& tweets){
         /* Keep tweet only */
         t_content = line.substr(prev, line.size() - prev);
 
-        tweet* cur_tweet = new tweet(tweet_id, t_content);
+        tweet* cur_tweet = new tweet(tweet_id, t_index, t_content);
         this->tweets->push_back(cur_tweet);
-        cur_user->add_tweet(tweet_id);
+        cur_user->add_tweet(t_index);
 
         cur_tweet->eval_sentiment(*(this->get_cryptos()), *(this->get_crypto_tags()), *(this->get_lexicon()));
+
+        t_index++;
+    }
+}
+
+void r_service::eval_users(){
+
+    /* Evaluate all users' sentiments about registered cryptocurrencies */
+    for(vector<user*>::iterator usr = this->users->begin(); usr != this->users->end(); usr++){
+        (*usr)->eval_sentiment(*(this->tweets), *(this->cryptos));
     }
 }

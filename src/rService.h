@@ -67,4 +67,7 @@ class r_service{
         */
         void register_tweets(std::ifstream&);
 
+        /* Evaluate sentiments for all users registered, according to their tweets */
+        void eval_users();
+
 };
