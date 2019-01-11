@@ -27,111 +27,81 @@ template float exchausting_s(dataset<int>&, vector_item<int>&, int);
 
 /*  All functions implementions that are defined in utils.h */
 
-/* Initialize struct with defaults values */
+/* Initialize struct with default values */
 exe_args::exe_args(){
-    all_combinations = 1;
+    init = 1;
+    assign = 1;
+    upd = 1;
     metric = 1;
     k = -1;
     max_updates = 30;
     L = DEFAULT_L;
-    complete = 0;
     hf = DEFAULT_K;
     hc_probes = HC_DEFAULT_PROBES;
     hc_M = HC_DEFAULT_M;
     input_file = "";
-    output_file = "";
-    config_file = "";
+    config_file = CONF_FILE;
 }
 
 int get_parameters(int argc, char** argv, exe_args& pars){
-    for (int i = 1; i < argc; i += 2){ // get all parameters
+    // for (int i = 1; i < argc; i += 2){ // get all parameters
             
-        string par(argv[i]); // get parameter
-        if(par.compare("-i") == 0){ // input file provided
-            if(!pars.input_file.empty()){ // input file(dataset) is provided twice
-                printf("Error in parameters! Input file [-i] is given more than once! Abort.\n");
-                return -2;
-            }
+    //     string par(argv[i]); // get parameter
+    //     if(par.compare("-i") == 0){ // input file provided
+    //         if(!pars.input_file.empty()){ // input file(dataset) is provided twice
+    //             printf("Error in parameters! Input file [-i] is given more than once! Abort.\n");
+    //             return -2;
+    //         }
 
-            pars.input_file = argv[i + 1];
+    //         pars.input_file = argv[i + 1];
         
-        } // end if -i
-        else if(par.compare("-c") == 0){ // configuration file parameter
-            if(!pars.config_file.empty()){ // port given twice
-                printf("Error in parameters! Configuration file [-c] is given more than once! Abort.\n");
-                return -2;
-            }
+    //     } // end if -i
+    //     else if(par.compare("-c") == 0){ // configuration file parameter
+    //         if(!pars.config_file.empty()){ // port given twice
+    //             printf("Error in parameters! Configuration file [-c] is given more than once! Abort.\n");
+    //             return -2;
+    //         }
             
-                pars.config_file = argv[i + 1];
-        } // end if -c
-        else if(par.compare("-o") == 0){ // output file parameter
-            if(!pars.output_file.empty()){ // output file twice
-                printf("Error in parameters! Output file [-o] is given more than once! Abort.\n");
-                return -2;
-            }
+    //             pars.config_file = argv[i + 1];
+    //     } // end if -c
+    //     else if(par.compare("-o") == 0){ // output file parameter
+    //         if(!pars.output_file.empty()){ // output file twice
+    //             printf("Error in parameters! Output file [-o] is given more than once! Abort.\n");
+    //             return -2;
+    //         }
 
-            pars.output_file = argv[i + 1];
-        } // end if -o
-        else if(par.compare("-d") == 0) { // metric parameter
-            if(!isNumber(argv[i + 1])){ // metric parameter given is not a number
-                printf("Error in parameters! Metric [-d] given is not a valid number. Should be 1 or 2. Abort\n");
-                return -2;
-            }
+    //         pars.output_file = argv[i + 1];
+    //     } // end if -o
+    //     else if(par.compare("-d") == 0) { // metric parameter
+    //         if(!isNumber(argv[i + 1])){ // metric parameter given is not a number
+    //             printf("Error in parameters! Metric [-d] given is not a valid number. Should be 1 or 2. Abort\n");
+    //             return -2;
+    //         }
 
-            pars.metric = atoi(argv[i + 1]);
-            if(pars.metric != 1 && pars.metric != 2){ // invalid number
-                printf("Error in parameters! Metric [-d] given is not a valid number. Should be 1 or 2. Abort\n");
-                return -2;
-            }
-        } // end if -d
-        else if(par.compare("-complete") == 0){ // complete parameter
-            pars.complete = 1;
-            i--;
-        } // end if -complete
-        else if(par.compare("-1c") == 0){ // only one combination
-            pars.all_combinations = 0;
-            i--;
-        }
-        else{
-            printf("Error in parameters. Unknown parameter given [%s]. Abort.\n", argv[i]);
-            return -2;
-        } // end switch
-    } // end for
+    //         pars.metric = atoi(argv[i + 1]);
+    //         if(pars.metric != 1 && pars.metric != 2){ // invalid number
+    //             printf("Error in parameters! Metric [-d] given is not a valid number. Should be 1 or 2. Abort\n");
+    //             return -2;
+    //         }
+    //     } // end if -d
+    //     else if(par.compare("-complete") == 0){ // complete parameter
+    //         pars.complete = 1;
+    //         i--;
+    //     } // end if -complete
+    //     else if(par.compare("-1c") == 0){ // only one combination
+    //         pars.all_combinations = 0;
+    //         i--;
+    //     }
+    //     else{
+    //         printf("Error in parameters. Unknown parameter given [%s]. Abort.\n", argv[i]);
+    //         return -2;
+    //     } // end switch
+    // } // end for
     return 0;
 }
 
-int validate_parameters(exe_args& pars, ofstream& output){
+int validate_parameters(exe_args& pars){
     
-    /* Get input file */
-    while(1){ // until correct input file is given
-
-        /* Check if input file was provided by parameters */
-        /* Also in case of re-execution, check if user wants another file to be used */
-        if(pars.input_file.empty()){
-            cout << "Please provide path to input file(dataset), or .. to abort: ";
-            fflush(stdout);
-            getline(cin, pars.input_file);
-            fflush(stdin);
-        }
-
-        /* Abort */
-        if(!pars.input_file.compare("..")){ 
-            cout << "No file was given. Abort." << endl;
-            return -1;
-        }
-
-        /* Check if file exists */
-        struct stat buffer;
-        if(stat (pars.input_file.c_str(), &buffer) != 0){
-            cout << "File " << pars.input_file << " does not exist. Try again." << endl;
-            pars.input_file = "";
-            continue;
-        }
-        else{
-            break;
-        }
-    }
-
     /* Get configuration file */
     while(1){ // until correct file is given
             
@@ -172,12 +142,62 @@ int validate_parameters(exe_args& pars, ofstream& output){
         }
     }
 
+    /* Get input file */
+    while(1){ // until correct input file is given
+
+        /* Check if input file was provided by parameters */
+        /* Also in case of re-execution, check if user wants another file to be used */
+        if(pars.input_file.empty()){
+            cout << "Please provide path to input file(dataset), or .. to abort: ";
+            fflush(stdout);
+            getline(cin, pars.input_file);
+            fflush(stdin);
+        }
+
+        /* Abort */
+        if(!pars.input_file.compare("..")){ 
+            cout << "No file was given. Abort." << endl;
+            return -1;
+        }
+
+        /* Check if file exists */
+        struct stat buffer;
+        if(stat (pars.input_file.c_str(), &buffer) != 0){
+            cout << "File " << pars.input_file << " does not exist. Try again." << endl;
+            pars.input_file = "";
+            continue;
+        }
+        else{
+            break;
+        }
+    }
+
+
     /* Validity check */
+
+    /* Check init algorithm */
+    if(pars.init < 1 && pars.init > 2){
+        cout << "Invalid initialization algorithm provided! Abort." << endl;
+        return -3;
+    }
+    
+    /* Check assign algorithm */
+    if(pars.assign < 1 && pars.assign > 3){
+        cout << "Invalid assign algorithm provided! Abort." << endl;
+        return -3;
+    }
+    
+    /* Check upd algorithm */
+    if(pars.upd < 1 && pars.upd > 2){
+        cout << "Invalid update algorithm provided! Abort." << endl;
+        return -3;
+    }
+    
 
     /* Check metric */
     if(pars.metric != 1 && pars.metric != 2){
         cout << "Invalid metric provided! Abort." << endl;
-        return -2;
+        return -3;
     }
 
     /* Check number of cluster */
@@ -253,6 +273,21 @@ int read_config_file(ifstream& conf_file, exe_args& pars){
         else if(line.compare(0, 7,"metric:") == 0){ // metric
             string par = line.substr(7, line.length() - 7);
             pars.metric = stoi(par);
+        }
+        else if(line.compare(0, 5,"init:") == 0){ // init algorithm
+            string par = line.substr(5, line.length() - 5);
+            pars.init = stoi(par);
+        }
+        else if(line.compare(0, 7,"assign:") == 0){ // init algorithm
+            string par = line.substr(7, line.length() - 7);
+            pars.assign = stoi(par);
+        }
+        else if(line.compare(0, 4,"upd:") == 0){ // init algorithm
+            string par = line.substr(4, line.length() - 4);
+            pars.upd = stoi(par);
+        }
+        else if(line.compare(0, 6, "input:") == 0){ // input file
+            pars.input_file = line.substr(6, line.length() - 6);
         }
     }
 
@@ -383,7 +418,7 @@ int read_combination(int& init, int& assign, int& update){
     return 0;
 }
 
-void print_exe_details(exe_args& pars, int init, int assign, int update){
+void print_exe_details(exe_args& pars){
     cout << "\nExecution details:" << endl;
     cout << "------------------" << endl;
     
@@ -399,20 +434,20 @@ void print_exe_details(exe_args& pars, int init, int assign, int update){
     cout << "  *Maximum number of updates: " << pars.max_updates << endl;    
 
     /* Print init algorithm */
-    if(init == 1)
+    if(pars.init == 1)
         cout << "  *Initialization Algorithm: (1)Random selection of k points from dataset." << endl;
-    else if(init == 2)
+    else if(pars.init == 2)
         cout << "  *Initialization Algorithm: (2)K-means++." << endl;
     
     /* Print assign algorithm */
-    if(assign == 1)
+    if(pars.assign == 1)
         cout << "  *Assignment Algorithm: (1)Lloyd's Assignment." << endl;
-    if(assign == 2){
+    if(pars.assign == 2){
         cout << "  *Assignment Algorithm: (2)LSH Range Search." << endl;
         cout << "    **Number of Hash Tables: " << pars.L << endl;
         cout << "    **Number of Hash Functions: " << pars.hf << endl;
     }
-    if(assign == 3){
+    if(pars.assign == 3){
         cout << "  *Assignment Algorithm: (1)Hypercube Range Search." << endl;
         cout << "    **Number of Hash Functions: " << pars.hf << endl;
         cout << "    **Number of probes: " << pars.hc_probes << endl;
@@ -420,14 +455,13 @@ void print_exe_details(exe_args& pars, int init, int assign, int update){
     }
 
     /* Print Update algorithm */
-    if(update == 1)
+    if(pars.upd == 1)
         cout << "  *Update Algorithm: (1)K-means." << endl;
-    else if(update == 2)
+    else if(pars.upd == 2)
         cout << "  *Update Algorithm: (2)Partioning around medoids(PAM)." << endl;
     
     cout << "  *Input file: " << pars.input_file << endl;
     cout << "  *Config file: " << pars.config_file << endl;
-    cout << "  *Output file: " << pars.output_file << endl;
          
     cout << endl;
 }

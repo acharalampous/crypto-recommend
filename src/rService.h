@@ -14,6 +14,7 @@
 #include <string>
 
 #include "tweet.h"
+#include "clusters.h"
 
 /* Implementation of all necessary structs and methods that 
  * will be used in order to implement all the recommendation
@@ -24,10 +25,13 @@
 class r_service{
     private:
         std::vector<user*>* users; // all users that tweeted
+        std::vector<user*>* im_users; // all imaginary users created from clustering tweets
         std::vector<tweet*>* tweets; // all the tweets
         std::vector<cryptocurrency*>* cryptos; // all cryptocurrencies
         std::unordered_map<std::string, cryptocurrency*>* crypto_tags; // all tags of cryptos
         std::unordered_map<std::string, float>* lexicon; // all words with their sentiment value
+    
+        cl_management<double>* cl_manage; // clustering options for creating fictionary users
     public:
         /* Con-De Structor */
         r_service();
@@ -70,4 +74,19 @@ class r_service{
         /* Evaluate sentiments for all users registered, according to their tweets */
         void eval_users();
 
+        /*  Using the tweets from part2[Clustering], create k clusters.
+            Each cluster from the clustering process, will be an imaginary user
+            and each item in cluster, its tweets.
+        */
+        int create_im_users();
+
+        /* First phase of creating imaginary users! As in 2nd part, tweets are placed */
+        /* in cluster, using the parameters found in the configuration file */ 
+        int cluster_tweets();
+
+        /* Turn all created clusters into users and assign their tweets to them */
+        void clusters_to_users();
+
+        /* Evaluate sentiments for all imaginary users registered, according to their tweets */
+        void eval_im_users();
 };

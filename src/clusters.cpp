@@ -337,7 +337,7 @@ cl_management<T>::cl_management(exe_args& pars, int init_alg, int assign_alg, in
     this->hc_probes = pars.hc_probes;
     this->hc_M = pars.hc_M;
     this->avg_silhouette = -1.0;
-    this->complete = pars.complete;
+    this->complete = 0;
 
     /* Create empty clusters */
     for(int i = 0; i < k; i++)
@@ -404,7 +404,6 @@ void cl_management<T>::clustering(exe_args& parameters, int init, int assign, in
     this->fill_dataset(input);
     cout << "Dataset is created." << endl;
 
-    this->tick();
     cout << "Initializing Clusters..." << endl;
     this->init_clusters();
     cout << "Clusters were Initialized." << endl;
@@ -417,20 +416,9 @@ void cl_management<T>::clustering(exe_args& parameters, int init, int assign, in
     while(1){
         int made_changes = this->update_clusters();
         this->assign_clusters();
-        // cout << "Iteration #" << i++ << ":" << endl;
         if(made_changes == 0 || i >= this->max_updates)
             break;
     }
-    this->tock();
-    
-    cout << "Calculating Silhouette..." << endl;
-    this->silhouette();
-    cout << "Done Calculating Silhouette." << endl;
-
-    cout << "Printing resutls to file..." << endl;
-    cout << "Done Printing to file." << endl;
-
-    cout << "Finished Combination." << endl;
     cout << "-------------------------------------------------------------------------\n" << endl;
 }
 

@@ -32,17 +32,17 @@ typedef double (*dist_func)(vector_item<double>&, vector_item<double>&);
 /* Struct that holds all the parameters given through command line and config */
 /* file, for the clustering algorithms                                        */
 typedef struct exe_args{
-    int all_combinations; // 1: execute all 12 combinations, 0: execute specific
+    int init; // initializaton algorithm
+    int assign; // assign algorithm
+    int upd; // update algorithm
     int metric; // 1: euclidean, 2: cosine
     int k; // number of clusters to be created
     int max_updates; // max number of updates-assigns
-    int complete; // for printing
     int L; // number of hash tables in lsh/hc
     int hf; // number of hash functions in lsh/hc
     int hc_probes; // number of probes for lsh/hc
     int hc_M; // number of M for lsh/hc
     std::string input_file; // input file
-    std::string output_file; // output file
     std::string config_file; // configuration file
 
 
@@ -66,7 +66,7 @@ int get_parameters(int, char**, exe_args&);
 /* and check for valid parameters. Returns 0 if ok, else  */
 /* -1 for invalid command line parameters or -2 for inv   */
 /* configuration file                                     */
-int validate_parameters(exe_args&, std::ofstream&);
+int validate_parameters(exe_args&);
 
 /* Open config file and read all configuration parameters */
 int read_config_file(std::ifstream&, exe_args&);
@@ -81,7 +81,7 @@ void printValidConfig();
 /* from user                                                */
 int read_combination(int&, int&, int&);
 
-void print_exe_details(exe_args&, int, int, int);
+void print_exe_details(exe_args&);
 /*  Given a string, it check char-char to see if integer.   */
 /*  Is yes, returns 1, else 0.                              */
 int isNumber(char*);

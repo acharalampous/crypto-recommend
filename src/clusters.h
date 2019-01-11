@@ -15,6 +15,8 @@
 #include "dataset.h"
 #include "cl_algorithms.h"
 
+#define CONF_FILE "cluster.conf" // configuration file for clustering options
+
 template <class T> class cl_init_algorithm;
 template <class T> class cl_assign_algorithm;
 template <class T> class cl_update_algorithm;

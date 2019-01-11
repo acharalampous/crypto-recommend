@@ -65,12 +65,13 @@ class tweet{
 class user{
     private:
         int user_id; // id of user
+        int user_type; // 1: real user, 2: imaginary user[from clustering]
         std::vector<float>* sentiments; // sentiment for each currency [uj]
         std::vector<int>* tweets; // index of each tweet of user
         std::unordered_set<int>* cryptos; // index of each crypto, the user referenced
     public:
         /* Con-De Structor */
-        user(int); // given the user id create a new user
+        user(int, int); // given the user id create a new user
         ~user();
 
         /* Accessors */

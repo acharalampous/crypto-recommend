@@ -137,8 +137,9 @@ void tweet::eval_sentiment(vector<cryptocurrency*>& cryptos,
 ////////////
 /** USER **/
 ////////////
-user::user(int id){
+user::user(int id, int type){
     this->user_id = id;
+    this->user_type = type;
     this->sentiments = new vector<float>;
     this->tweets = new vector<int>;
     this->cryptos = new unordered_set<int>;
@@ -194,4 +195,12 @@ void user::eval_sentiment(std::vector<tweet*>& tweets, std::vector<cryptocurrenc
             this->cryptos->insert(cc_index); // save cc in user referenced cryptos
         }
     }
+
+
+    // cout << user_type << "." << user_id << endl;
+    // for(unsigned int i = 0; i < this->sentiments->size(); i++){
+    //     cout << this->sentiments->at(i) << " ";
+    // }
+
+    // cout << endl << endl;
 }
