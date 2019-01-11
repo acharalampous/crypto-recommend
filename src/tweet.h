@@ -39,14 +39,14 @@ class cryptocurrency{
 class tweet{
     private:
         int tweet_id; // id of tweet 
-        int tweet_index; // index of tweet in container
+        //int tweet_index; // index of tweet in container
         float totalscore; // total score of tweet before normalization
         float sentiment; // sentiment of tweet after normalization
         std::string data; // text of the tweet
         std::unordered_set<int>* cryptos; // index of each cryptocurrency mentioned in tweet 
     public:
         /* Con-De Structor */
-        tweet(int, int,  std::string); // given the tweet id, index and data construct a new tweet
+        tweet(int, std::string); // given the tweet id, index and data construct a new tweet
         ~tweet();
 
         /* Accessors */

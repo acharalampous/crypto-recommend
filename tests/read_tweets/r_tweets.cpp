@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 
 using namespace std;
 
@@ -10,6 +11,17 @@ int main(void){
     string id;
     string tweet_id;
     string tweet;
+
+    int total = 0;
+    while(getline(new_file, line))
+        total++;
+
+    cout << total << endl;
+    sleep(3);
+    new_file.clear();
+    new_file.seekg(0, ios::beg);
+
+    
     while(getline(new_file, line)){
         if (line[line.size() - 1] == '\r')
             line.erase(line.size() - 1);
@@ -33,18 +45,6 @@ int main(void){
         cout << "TWEET: " << tweet << endl;
 
         tweet = line.substr(prev, line.size() - prev);
-
-        // while ((pos = line.find_first_of("\t,", prev)) != string::npos)
-        // {
-        //     // sleep(1);
-        //     if (pos > prev)
-        //         cout << i << ". " << line.substr(prev, pos - prev) << endl;
-        //     prev = pos+1;
-        //     i++;
-        // }
-        
-        // if (prev < line.length())
-        //     cout << i << ". " << line.substr(prev, string::npos) << endl;
     }
 
 }

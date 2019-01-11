@@ -143,8 +143,17 @@ void r_service::register_tweets(ifstream& tweets){
     string t_content; // tweet content
     user* cur_user = NULL;
 
+    /* Get number of tweets and make space for them in vector*/
+    int total_tweets = 0;
+    while(getline(tweets, line))
+        total_tweets++;
 
-    unsigned int t_index = 0; // tweet index in container
+    this->tweets->resize(total_tweets + 1); // +1 in order to place each tweet to the exact index with its id
+
+    /* Read file again from start */
+    tweets.clear();
+    tweets.seekg(0, ios::beg);
+
     /* Scan whole file and store every tweet found */
     while(getline(tweets, line)){
         size_t prev = 0, pos;
@@ -175,13 +184,11 @@ void r_service::register_tweets(ifstream& tweets){
         /* Keep tweet only */
         t_content = line.substr(prev, line.size() - prev);
 
-        tweet* cur_tweet = new tweet(tweet_id, t_index, t_content);
-        this->tweets->push_back(cur_tweet);
-        cur_user->add_tweet(t_index);
+        tweet* cur_tweet = new tweet(tweet_id, t_content);
+        this->tweets->at(tweet_id) = cur_tweet;
+        cur_user->add_tweet(tweet_id);
 
         cur_tweet->eval_sentiment(*(this->get_cryptos()), *(this->get_crypto_tags()), *(this->get_lexicon()));
-
-        t_index++;
     }
 }
 

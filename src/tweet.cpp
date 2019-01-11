@@ -49,9 +49,8 @@ void cryptocurrency::set_name(string new_name){
 /////////////
 /** TWEET **/
 /////////////
-tweet::tweet(int tweet_id, int tweet_index, string data){
+tweet::tweet(int tweet_id, string data){
     this->tweet_id = tweet_id;
-    this->tweet_index = tweet_index;
     this->totalscore = 0.0;
     this->sentiment = 0.0;
     this->data = data;
@@ -192,7 +191,7 @@ void user::eval_sentiment(std::vector<tweet*>& tweets, std::vector<cryptocurrenc
             /* Get cryptocurrency index and add to user's cc sentiment */
             int cc_index = *it; 
             this->sentiments->at(cc_index) += t_sentiment;
-            this->cryptos->insert(cc_index); // save cc in user referenced cryptos)
+            this->cryptos->insert(cc_index); // save cc in user referenced cryptos
         }
     }
 }
