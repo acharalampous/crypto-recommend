@@ -32,23 +32,43 @@ r_service::r_service(){
 }
 
 r_service::~r_service(){
+
     /* Destroy all users */
-    for(unsigned int i = 0; i < users->size(); i++)
-        delete users->at(i);
-    delete this->users;
+    if(this->users != NULL){
+        for(unsigned int i = 0; i < users->size(); i++)
+            delete users->at(i);
+        delete this->users;
+    }
+
+    /* Destroy all imaginary users */
+    if(this->im_users != NULL){
+        for(unsigned int i = 0; i < im_users->size(); i++)
+            delete im_users->at(i);
+        delete this->im_users;
+    }
     
     /* Destroy all tweets */
-    for(unsigned int i = 0; i < tweets->size(); i++)
-        delete tweets->at(i);
-    delete this->tweets;
+    if(this->tweets != NULL){
+        for(unsigned int i = 0; i < tweets->size(); i++)
+            delete tweets->at(i);
+        delete this->tweets;
+    }
 
-    delete this->crypto_tags;
-    delete this->lexicon;
+    if(this->crypto_tags != NULL)
+        delete this->crypto_tags;
+    
+    if(this->lexicon != NULL)
+        delete this->lexicon;
 
     /* Destroy all cryptos */
-    for(unsigned int i = 0; i < cryptos->size(); i++)
-        delete cryptos->at(i);
-    delete this->cryptos;
+    if(this->cryptos != NULL){
+        for(unsigned int i = 0; i < cryptos->size(); i++)
+            delete cryptos->at(i);
+        delete this->cryptos;
+    }
+
+    if(this->cl_manage != NULL)
+        delete this->cl_manage;
 }
 
 vector<cryptocurrency*>* r_service::get_cryptos(){
