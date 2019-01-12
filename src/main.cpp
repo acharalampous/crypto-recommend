@@ -23,7 +23,10 @@ int main(void){
 
     recsys->eval_users();
 
-    recsys->create_im_users();
+    if(recsys->create_im_users() != 0){
+        cout << "Exiting with err" << endl;
+        return -1;
+    }
 
     cout << "Deleting Everything" << endl;
     delete recsys;

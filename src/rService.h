@@ -15,6 +15,7 @@
 
 #include "tweet.h"
 #include "clusters.h"
+#include "lsh.h"
 
 /* Implementation of all necessary structs and methods that 
  * will be used in order to implement all the recommendation
@@ -24,23 +25,29 @@
 /* r_service */
 class r_service{
     private:
-        std::vector<user*>* users; // all users that tweeted
-        std::vector<user*>* im_users; // all imaginary users created from clustering tweets
-        std::vector<tweet*>* tweets; // all the tweets
-        std::vector<cryptocurrency*>* cryptos; // all cryptocurrencies
-        std::unordered_map<std::string, cryptocurrency*>* crypto_tags; // all tags of cryptos
-        std::unordered_map<std::string, float>* lexicon; // all words with their sentiment value
+        std::vector<user*> users; // all users that tweeted
+        std::vector<user*> im_users; // all imaginary users created from clustering tweets
+        std::vector<tweet*> tweets; // all the tweets
+        std::vector<cryptocurrency*> cryptos; // all cryptocurrencies
+        std::unordered_map<std::string, cryptocurrency*> crypto_tags; // all tags of cryptos
+        std::unordered_map<std::string, double> lexicon; // all words with their sentiment value
     
         cl_management<double>* cl_manage; // clustering options for creating fictionary users
+
+        /* Problem 1 - COSINE LSH RECOMMENDATION */
+        dataset<double>* r_dataset; // real users dataset
+        dataset<double>* i_dataset; // imaginary users dataset
+        LSH<double>* lsh;
+
     public:
         /* Con-De Structor */
         r_service();
         ~r_service();
 
         /* Accessors */
-        std::vector<cryptocurrency*>* get_cryptos(); // get cryptos vector
-        std::unordered_map<std::string, cryptocurrency*>* get_crypto_tags(); // get crypto tags map
-        std::unordered_map<std::string, float>* get_lexicon(); // get all words map
+        std::vector<cryptocurrency*>& get_cryptos(); // get cryptos vector
+        std::unordered_map<std::string, cryptocurrency*>& get_crypto_tags(); // get crypto tags map
+        std::unordered_map<std::string, double>& get_lexicon(); // get all words map
 
 
         

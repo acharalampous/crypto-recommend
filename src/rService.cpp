@@ -11,6 +11,7 @@
 #include <string>
 
 #include "rService.h"
+#include "lsh.h"
 
 using namespace std;
 
@@ -22,72 +23,67 @@ using namespace std;
 /** r_service **/
 /////////////////
 r_service::r_service(){
-    this->users = new vector<user*>;
-    this->im_users = new vector<user*>;
-    this->tweets = new vector<tweet*>;
-    this->cryptos = new vector<cryptocurrency*>;
-    this->crypto_tags = new unordered_map<string, cryptocurrency*>;
-    this->lexicon = new unordered_map<string, float>;
-    cl_manage = NULL;
+    this->cl_manage = NULL;
+    this->lsh = NULL;
+    this->r_dataset = NULL;
+    this->i_dataset = NULL;
 }
 
 r_service::~r_service(){
-
     /* Destroy all users */
-    if(this->users != NULL){
-        for(unsigned int i = 0; i < users->size(); i++)
-            delete users->at(i);
-        delete this->users;
-    }
+    for(unsigned int i = 0; i < users.size(); i++)
+        delete users[i];
+    users.clear();
 
     /* Destroy all imaginary users */
-    if(this->im_users != NULL){
-        for(unsigned int i = 0; i < im_users->size(); i++)
-            delete im_users->at(i);
-        delete this->im_users;
-    }
+    for(unsigned int i = 0; i < im_users.size(); i++)
+        delete im_users[i];
+    im_users.clear();
     
     /* Destroy all tweets */
-    if(this->tweets != NULL){
-        for(unsigned int i = 0; i < tweets->size(); i++)
-            delete tweets->at(i);
-        delete this->tweets;
-    }
+    for(unsigned int i = 0; i < tweets.size(); i++)
+        delete tweets[i];
+    tweets.clear();
 
-    if(this->crypto_tags != NULL)
-        delete this->crypto_tags;
-    
-    if(this->lexicon != NULL)
-        delete this->lexicon;
+    crypto_tags.clear();
+    lexicon.clear();
 
     /* Destroy all cryptos */
-    if(this->cryptos != NULL){
-        for(unsigned int i = 0; i < cryptos->size(); i++)
-            delete cryptos->at(i);
-        delete this->cryptos;
-    }
+    for(unsigned int i = 0; i < cryptos.size(); i++)
+        delete cryptos[i];
+    cryptos.clear();
 
-    if(this->cl_manage != NULL)
-        delete this->cl_manage;
+
+    if(cl_manage != NULL)
+        delete cl_manage;
+
+    if(lsh != NULL)
+        delete lsh;
+
+    if(r_dataset != NULL)
+        delete r_dataset;
+    
+    if(i_dataset != NULL)
+        delete i_dataset;
 }
 
-vector<cryptocurrency*>* r_service::get_cryptos(){
+vector<cryptocurrency*>& r_service::get_cryptos(){
     return this->cryptos;
 }
 
-unordered_map<string, cryptocurrency*>* r_service::get_crypto_tags(){
+unordered_map<string, cryptocurrency*>& r_service::get_crypto_tags(){
     return this->crypto_tags;
 }
 
-unordered_map<string, float>* r_service::get_lexicon(){
+unordered_map<string, double>& r_service::get_lexicon(){
     return this->lexicon;
 }
 
 void r_service::register_cryptos(ifstream& cc){
     string line;
     int i = 0; // id of each cryptocurrency
-    vector<cryptocurrency*>* cryptos = this->get_cryptos();
-    unordered_map<string, cryptocurrency*>* crypto_tags = this->get_crypto_tags();
+    vector<cryptocurrency*>& cryptos = this->get_cryptos();
+    unordered_map<string, cryptocurrency*>& crypto_tags = this->get_crypto_tags();
 
     /* Scan whole file */
     while(getline(cc, line)){
@@ -105,12 +101,12 @@ void r_service::register_cryptos(ifstream& cc){
             if (pos > prev){
                 tag = line.substr(prev, pos - prev);
                 if(j == 0){ // construct new cryptocurrency
-                    cryptos->push_back(new cryptocurrency(tag, i));
+                    cryptos.push_back(new cryptocurrency(tag, i));
                 }
                 else if(j == 4){ // set cryptocurrency's name
-                    (*cryptos)[i]->set_name(tag);
+                    cryptos[i]->set_name(tag);
                 }
-                (*crypto_tags)[tag] = (*cryptos)[i]; // map tag's cryptocurrency
+                crypto_tags[tag] = cryptos[i]; // map tag's cryptocurrency
             }
             prev = pos + 1;
             j++;
@@ -119,12 +115,12 @@ void r_service::register_cryptos(ifstream& cc){
         if (prev < line.length()){
             tag = line.substr(prev, string::npos);
             if(j == 0){ // construct new cryptocurrency
-                cryptos->push_back(new cryptocurrency(tag, i));
+                cryptos.push_back(new cryptocurrency(tag, i));
             }
             else if(j == 4){ // set cryptocurrency's name
-                (*cryptos)[i]->set_name(tag);
+                cryptos[i]->set_name(tag);
             }
-            (*crypto_tags)[tag] = (*cryptos)[i]; // set tags' cryptocurrency
+            crypto_tags[tag] = cryptos[i]; // set tags' cryptocurrency
         }
         i++;
     }
@@ -150,9 +146,9 @@ void r_service::register_words(ifstream& lxc){
         prev = pos + 1;
 
         /* Getting sentiment of word */
-        float val = stof(line.substr(prev, string::npos));
+        double val = stod(line.substr(prev, string::npos));
 
-        (*lexicon)[word] = val;
+        lexicon[word] = val;
     }
 }
 
@@ -170,7 +166,7 @@ void r_service::register_tweets(ifstream& tweets){
     while(getline(tweets, line))
         total_tweets++;
 
-    this->tweets->resize(total_tweets + 1); // +1 in order to place each tweet to the exact index with its id
+    this->tweets.resize(total_tweets + 1); // +1 in order to place each tweet to the exact index with its id
 
     /* Read file again from start */
     tweets.clear();
@@ -193,12 +189,12 @@ void r_service::register_tweets(ifstream& tweets){
         /* Checking for new user */
         if(user_id.compare(prev_id) != 0){
             cur_user = new user(stoi(user_id), 1);
-            this->users->push_back(cur_user);
+            this->users.push_back(cur_user);
             prev_id = user_id;
         }
 
         /* Reading tweet id */
-        pos = line.find_first_of("\t,", prev);
+        pos = line.find_first_of("\t", prev);
         
         tweet_id = stoi(line.substr(prev, pos - prev));
         prev = pos + 1;
@@ -207,18 +203,18 @@ void r_service::register_tweets(ifstream& tweets){
         t_content = line.substr(prev, line.size() - prev);
 
         tweet* cur_tweet = new tweet(tweet_id, t_content);
-        this->tweets->at(tweet_id) = cur_tweet;
+        this->tweets[tweet_id] = cur_tweet;
         cur_user->add_tweet(tweet_id);
 
-        cur_tweet->eval_sentiment(*(this->get_cryptos()), *(this->get_crypto_tags()), *(this->get_lexicon()));
+        cur_tweet->eval_sentiment(this->get_cryptos(), this->get_crypto_tags(), this->get_lexicon());
     }
 }
 
 void r_service::eval_users(){
 
     /* Evaluate all users' sentiments about registered cryptocurrencies */
-    for(vector<user*>::iterator usr = this->users->begin(); usr != this->users->end(); usr++){
-        (*usr)->eval_sentiment(*(this->tweets), *(this->cryptos));
+    for(unsigned int i = 0; i < this->users.size(); i++){
+        this->users[i]->eval_sentiment(this->tweets, this->cryptos);
     }
 }
 
@@ -245,6 +241,7 @@ int r_service::cluster_tweets(){
     /* Read config file for clustering settings */
     int result = validate_parameters(parameters);
     if(result == -1){
+        cout << "Error with clustering parameters" << endl;
         return -1;
     }
     else if(result == -3){
@@ -275,7 +272,7 @@ void r_service::clusters_to_users(){
     for(int i = 0; i < num_of_clusters; i++){
         /* Create user */
         cur_user = new user(id++, 2);
-        this->im_users->push_back(cur_user);
+        this->im_users.push_back(cur_user);
 
         /* Get current cluster */
         cluster<double>* cur_cl = clusters[i];
@@ -304,7 +301,7 @@ void r_service::clusters_to_users(){
 void r_service::eval_im_users(){
 
     /* Evaluate all imaginary users' sentiments about registered cryptocurrencies */
-    for(vector<user*>::iterator usr = this->im_users->begin(); usr != this->im_users->end(); usr++){
-        (*usr)->eval_sentiment(*(this->tweets), *(this->cryptos));
+    for(unsigned int i = 0; i < this->im_users.size(); i++){
+        this->im_users[i]->eval_sentiment(this->tweets, this->cryptos);
     }
 }

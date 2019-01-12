@@ -54,23 +54,21 @@ tweet::tweet(int tweet_id, string data){
     this->totalscore = 0.0;
     this->sentiment = 0.0;
     this->data = data;
-    this->cryptos = new unordered_set<int>;
 
 } 
 
 tweet::~tweet(){
-    delete this->cryptos;
 }
 
 int tweet::get_id(){
     return this->tweet_id;
 }
 
-float tweet::get_totalscore(){
+double tweet::get_totalscore(){
     return this->totalscore;
 }
 
-float tweet::get_sentiment(){
+double tweet::get_sentiment(){
     return this->sentiment;
 }
 
@@ -78,13 +76,13 @@ std::string& tweet::get_data(){
     return this->data;
 }
 
-std::unordered_set<int>* tweet::get_cryptos(){
+std::unordered_set<int>& tweet::get_cryptos(){
     return this->cryptos;
 }
 
 void tweet::eval_sentiment(vector<cryptocurrency*>& cryptos, 
                            unordered_map<string,cryptocurrency*>& crypto_tags,
-                           unordered_map<string, float>& lexicon
+                           unordered_map<string, double>& lexicon
                           ){
     
     string temp_data = this->data;
@@ -100,11 +98,11 @@ void tweet::eval_sentiment(vector<cryptocurrency*>& cryptos,
             /* Check if term is a cc reference */     
             unordered_map<string, cryptocurrency*>::const_iterator cc_finder = crypto_tags.find(term);
             if (cc_finder != crypto_tags.end()){ // cc reference
-                this->cryptos->insert(cc_finder->second->get_id()); // save cc in tweet cryptos
+                this->cryptos.insert(cc_finder->second->get_id()); // save cc in tweet cryptos
             }
             
             /* Check if term is in lexicon and if yes add sentiment to totalscore */
-            unordered_map<string, float>::const_iterator lxc_finder = lexicon.find(term);
+            unordered_map<string, double>::const_iterator lxc_finder = lexicon.find(term);
             if (lxc_finder != lexicon.end()){ // term exists in lexicon
                 this->totalscore += lxc_finder->second;
             }
@@ -119,17 +117,17 @@ void tweet::eval_sentiment(vector<cryptocurrency*>& cryptos,
         /* Check if term is a cc reference */     
         unordered_map<string, cryptocurrency*>::const_iterator cc_finder = crypto_tags.find(term);
         if (cc_finder != crypto_tags.end()){ // cc reference
-            this->cryptos->insert(cc_finder->second->get_id()); // save cc in tweet cryptos
+            this->cryptos.insert(cc_finder->second->get_id()); // save cc in tweet cryptos
         }
         
         /* Check if term is in lexicon and if yes add sentiment to totalscore */
-        unordered_map<string, float>::const_iterator lxc_finder = lexicon.find(term);
+        unordered_map<string, double>::const_iterator lxc_finder = lexicon.find(term);
         if (lxc_finder != lexicon.end()){ // term exists in lexicon
             this->totalscore += lxc_finder->second;
         }
     }
 
-    this->sentiment = totalscore / (sqrt((totalscore * totalscore) + ALPHA));
+    this->sentiment = totalscore / (double)(sqrt((totalscore * totalscore) + ALPHA));
 }
 
 
@@ -140,66 +138,60 @@ void tweet::eval_sentiment(vector<cryptocurrency*>& cryptos,
 user::user(int id, int type){
     this->user_id = id;
     this->user_type = type;
-    this->sentiments = new vector<float>;
-    this->tweets = new vector<int>;
-    this->cryptos = new unordered_set<int>;
 }
 
 user::~user(){
-    delete this->sentiments;
-    delete this->tweets;
-    delete this->cryptos;
 }
 
 int user::get_id(){
     return this->user_id;
 }
 
-std::vector<float>* user::get_sentiments(){
+std::vector<double>& user::get_sentiments(){
     return this->sentiments;
 }
 
-std::vector<int>* user::get_tweets(){
+std::vector<int>& user::get_tweets(){
     return this->tweets;
 }
 
-std::unordered_set<int>* user::get_cryptos(){
+std::unordered_set<int>& user::get_cryptos(){
     return this->cryptos;
 }
 
 void user::add_tweet(int t_index){
-    this->tweets->push_back(t_index);
+    this->tweets.push_back(t_index);
 }
 
 void user::eval_sentiment(std::vector<tweet*>& tweets, std::vector<cryptocurrency*>& cryptos){
     
     /* Initialize all cryptocurrencies's sentiment as 0.0 */
     for(unsigned int i = 0; i < cryptos.size(); i++){
-        this->sentiments->push_back(0.0);
+        this->sentiments.push_back(0.0);
     }
 
     /* Get sentiments from all evaluated tweets */
     tweet* cur_tweet = NULL;
-    for(unsigned int i = 0; i < this->tweets->size(); i++){
-        cur_tweet = tweets.at((this->tweets->at(i))); // fetch tweet
+    for(unsigned int i = 0; i < this->tweets.size(); i++){
+        cur_tweet = tweets[this->tweets[i]]; // fetch tweet
 
         /* Get all cryptos referenced in current tweet */
-        unordered_set<int>* tweet_cryptos = cur_tweet->get_cryptos();
+        unordered_set<int>& tweet_cryptos = cur_tweet->get_cryptos();
         float t_sentiment = cur_tweet->get_sentiment();
         
         /* For each cryptocurrency in tweet, add to equivalent sentiment of user */
-        for(unordered_set<int>::iterator it = tweet_cryptos->begin(); it != tweet_cryptos->end(); it++){
+        for(unordered_set<int>::iterator it = tweet_cryptos.begin(); it != tweet_cryptos.end(); it++){
             /* Get cryptocurrency index and add to user's cc sentiment */
             int cc_index = *it; 
-            this->sentiments->at(cc_index) += t_sentiment;
-            this->cryptos->insert(cc_index); // save cc in user referenced cryptos
+            this->sentiments[cc_index] += t_sentiment;
+            this->cryptos.insert(cc_index); // save cc in user referenced cryptos
         }
     }
 
 
     // cout << user_type << "." << user_id << endl;
-    // for(unsigned int i = 0; i < this->sentiments->size(); i++){
-    //     cout << this->sentiments->at(i) << " ";
+    // for(unsigned int i = 0; i < this->sentiments.size(); i++){
+    //     cout << this->sentiments[i] << " ";
     // }
 
     // cout << endl << endl;

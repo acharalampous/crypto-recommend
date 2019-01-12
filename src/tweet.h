@@ -40,10 +40,10 @@ class tweet{
     private:
         int tweet_id; // id of tweet 
         //int tweet_index; // index of tweet in container
-        float totalscore; // total score of tweet before normalization
-        float sentiment; // sentiment of tweet after normalization
+        double totalscore; // total score of tweet before normalization
+        double sentiment; // sentiment of tweet after normalization
         std::string data; // text of the tweet
-        std::unordered_set<int>* cryptos; // index of each cryptocurrency mentioned in tweet 
+        std::unordered_set<int> cryptos; // index of each cryptocurrency mentioned in tweet 
     public:
         /* Con-De Structor */
         tweet(int, std::string); // given the tweet id, index and data construct a new tweet
@@ -51,14 +51,14 @@ class tweet{
 
         /* Accessors */
         int get_id();
-        float get_totalscore();
-        float get_sentiment();
+        double get_totalscore();
+        double get_sentiment();
         std::string& get_data();
-        std::unordered_set<int>* get_cryptos();
+        std::unordered_set<int>& get_cryptos();
 
         /* Evaluate sentiment, totalscore and find all cryptos reference in tweet, using the lexicon */
         void eval_sentiment(std::vector<cryptocurrency*>&, std::unordered_map<std::string, cryptocurrency*>&, 
-                            std::unordered_map<std::string, float>&);
+                            std::unordered_map<std::string, double>&);
 };
 
 /** user **/
@@ -66,9 +66,9 @@ class user{
     private:
         int user_id; // id of user
         int user_type; // 1: real user, 2: imaginary user[from clustering]
-        std::vector<float>* sentiments; // sentiment for each currency [uj]
-        std::vector<int>* tweets; // index of each tweet of user
-        std::unordered_set<int>* cryptos; // index of each crypto, the user referenced
+        std::vector<double> sentiments; // sentiment for each currency [uj]
+        std::vector<int> tweets; // index of each tweet of user
+        std::unordered_set<int> cryptos; // index of each crypto, the user referenced
     public:
         /* Con-De Structor */
         user(int, int); // given the user id create a new user
@@ -76,9 +76,9 @@ class user{
 
         /* Accessors */
         int get_id();
-        std::vector<float>* get_sentiments();
-        std::vector<int>* get_tweets();
-        std::unordered_set<int>* get_cryptos();
+        std::vector<double>& get_sentiments();
+        std::vector<int>& get_tweets();
+        std::unordered_set<int>& get_cryptos();
 
         void add_tweet(int); // add to user the given tweet's index
 
