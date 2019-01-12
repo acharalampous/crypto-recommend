@@ -135,8 +135,9 @@ void tweet::eval_sentiment(vector<cryptocurrency*>& cryptos,
 ////////////
 /** USER **/
 ////////////
-user::user(int id, int type){
+user::user(int id, int index, int type){
     this->user_id = id;
+    this->user_index = index;
     this->user_type = type;
 }
 
@@ -145,6 +146,14 @@ user::~user(){
 
 int user::get_id(){
     return this->user_id;
+}
+
+int user::get_index(){
+    return this->user_index;
+}
+
+int user::get_type(){
+    return this->user_type;
 }
 
 std::vector<double>& user::get_sentiments(){

@@ -13,6 +13,8 @@
 
 #define D 203 // number of dimensions
 
+#include "tweet.h"
+
 /* Implemenention of data Container that holds vectors as records */
 
 
@@ -26,6 +28,7 @@ class vector_item{
     public:
         /* Given the points of vector,id and index, create a new vector_item */
         vector_item(std::string&, int);
+        vector_item(user&);
         vector_item(); // Create an empty vector_item, not placed in dataset
 
         /* If given vector equals to object returns 1, else 0 */
@@ -55,6 +58,9 @@ class dataset{
         /* Given a string with all the points, create new record and push */
         void add_vector(std::string&);
         
+        /* Turn given user's sentiment score to vector_item */
+        void add_vector(user&);
+
         /* Accessors */
         int get_counter();
         vector_item<T>* get_item(int); // Returns pointer to the item stored int the index given 

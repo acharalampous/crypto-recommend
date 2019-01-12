@@ -96,4 +96,10 @@ class r_service{
 
         /* Evaluate sentiments for all imaginary users registered, according to their tweets */
         void eval_im_users();
+
+        /* Place all real users' sentiment score in dataset as vector */
+        void fill_r_dataset();
+
+        /* Place all imaginary users' sentiment score in dataset as vector */
+        void fill_i_dataset();
 };

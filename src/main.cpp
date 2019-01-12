@@ -28,6 +28,19 @@ int main(void){
         return -1;
     }
 
+    cout << "D = " << D << endl;
+    #undef D
+    #define D 100
+
+    cout << "D = " << D << endl;
+
+
+    
+    recsys->fill_r_dataset();
+    recsys->fill_i_dataset();
+
+
+
     cout << "Deleting Everything" << endl;
     delete recsys;
 

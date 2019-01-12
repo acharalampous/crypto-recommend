@@ -172,6 +172,8 @@ void r_service::register_tweets(ifstream& tweets){
     tweets.clear();
     tweets.seekg(0, ios::beg);
 
+
+    int index = 0;
     /* Scan whole file and store every tweet found */
     while(getline(tweets, line)){
         size_t prev = 0, pos;
@@ -188,7 +190,7 @@ void r_service::register_tweets(ifstream& tweets){
 
         /* Checking for new user */
         if(user_id.compare(prev_id) != 0){
-            cur_user = new user(stoi(user_id), 1);
+            cur_user = new user(stoi(user_id), index++, 1);
             this->users.push_back(cur_user);
             prev_id = user_id;
         }
@@ -271,7 +273,8 @@ void r_service::clusters_to_users(){
     user* cur_user = NULL;
     for(int i = 0; i < num_of_clusters; i++){
         /* Create user */
-        cur_user = new user(id++, 2);
+        cur_user = new user(id, id, 2);
+        id++;
         this->im_users.push_back(cur_user);
 
         /* Get current cluster */
@@ -303,5 +306,31 @@ void r_service::eval_im_users(){
     /* Evaluate all imaginary users' sentiments about registered cryptocurrencies */
     for(unsigned int i = 0; i < this->im_users.size(); i++){
         this->im_users[i]->eval_sentiment(this->tweets, this->cryptos);
+    }
+}
+
+void r_service::fill_r_dataset(){
+    if(this->r_dataset != NULL){
+        return;
+    }
+
+    this->r_dataset = new dataset<double>();
+    for(unsigned int i = 0; i < users.size(); i++){
+        user* cur_user = users[i];
+        r_dataset->add_vector(*cur_user);
+    }
+
+}
+
+void r_service::fill_i_dataset(){
+    if(this->i_dataset != NULL){
+        return;
+    }
+
+    this->i_dataset = new dataset<double>();
+
+    for(unsigned int i = 0; i < im_users.size(); i++){
+        user* cur_user = im_users[i];
+        i_dataset->add_vector(*cur_user);
     }
 }
