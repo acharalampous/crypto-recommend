@@ -43,18 +43,22 @@ class tweet{
         double totalscore; // total score of tweet before normalization
         double sentiment; // sentiment of tweet after normalization
         std::string data; // text of the tweet
-        std::unordered_set<int> cryptos; // index of each cryptocurrency mentioned in tweet 
+        std::vector<int> cryptos; // index of each cryptocurrency mentioned in tweet 
+        int total_referenced; // number of total cryptos that the tweet was referenced
     public:
         /* Con-De Structor */
         tweet(int, std::string); // given the tweet id, index and data construct a new tweet
         ~tweet();
+
+
 
         /* Accessors */
         int get_id();
         double get_totalscore();
         double get_sentiment();
         std::string& get_data();
-        std::unordered_set<int>& get_cryptos();
+        std::vector<int>& get_cryptos();
+        int get_total_referenced();
 
         /* Evaluate sentiment, totalscore and find all cryptos reference in tweet, using the lexicon */
         void eval_sentiment(std::vector<cryptocurrency*>&, std::unordered_map<std::string, cryptocurrency*>&, 
@@ -71,6 +75,7 @@ class user{
         std::vector<int> tweets; // index of each tweet of user
         std::vector<int> cryptos; // index of each crypto, the user referenced is 1, else 0
         int zero_vec; // 1: all sentiments are zero, 0: at least one non-zero sentiment 
+        double avg_sentiment; // average sentiment of all cryptos referenced
     public:
         /* Con-De Structor */
         user(int, int, int); // given the user id and index create a new user
@@ -84,6 +89,7 @@ class user{
         std::vector<int>& get_tweets();
         std::vector<int>& get_cryptos();
         int get_zero_vec();
+        double get_avg_sentiment();
 
         void add_tweet(int); // add to user the given tweet's index
 

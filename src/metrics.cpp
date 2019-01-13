@@ -805,18 +805,22 @@ void csimilarity<T>::get_neighbours(vector_item<T>& query, unordered_set<int>& n
 	/* Get vector points */
 	vector<T>* query_points = &(query.get_points());
 
+	/* Find bucket */
 	for(int i = 0; i < k; i++){
 		int temp = hfs[i].getValue(*query_points);
 		f += temp * pow(2, k - i - 1); // compute binary value
 	}
 
+	/* Get bucket */
 	vector<vector_item<T>*>& buck = get_bucket(f);
 
+	/* Get every neighbour in bucket that is not yet collected */
     for(unsigned int i = 0; i < buck.size(); i++){
         vector_item<T>* cur_vec = buck[i]; // get current vector
         int item_index = cur_vec->get_index(); // get item id
 
-        if(!in_set(neighs, item_index) && item_index != self_index) // check if already collected neighbours
+		/* Check if already collected neighbour */
+        if(!in_set(neighs, item_index) && item_index != self_index) 
             neighs.insert(item_index);
 	}
 }

@@ -9,6 +9,8 @@
 /********************************/
 #include <iostream>
 #include <string>
+#include <map>
+#include <random>
 
 #include "rService.h"
 #include "lsh.h"
@@ -23,6 +25,8 @@ using namespace std;
 /** r_service **/
 /////////////////
 r_service::r_service(){
+    this->P = 20;
+    this->out.open("outPut1");
     this->cl_manage = NULL;
     this->lsh = NULL;
     this->r_dataset = NULL;
@@ -310,23 +314,44 @@ void r_service::eval_im_users(){
 }
 
 void r_service::lsh_recommend(){
+    /* Place real users in dataset to be used in lsh */
     fill_r_dataset();
-
-
-    fill_i_dataset();
     
+    /* Initialize lsh for placing real users in it */
     init_lsh();
     
+    /* Fill lsh with real users */
     fill_lsh(1);
 
-    lsh_find_recs(5);
+    /* Find 5 recomendations for all real users */ 
+    lsh_find_recs(5, *(this->r_dataset));
+
+    delete this->lsh;
+    this->lsh = NULL;
+    
+////////////////////////////////////////////////////////////
+    this->out << endl << endl << "==========================================" << endl << endl; 
+
+    /* Place imaginary users in dataset to be used in lsh */
+    fill_i_dataset();
+
+    /*Initialize lsh for placing imaginary users in it */
+    init_lsh();
+
+    /* Fill lsh with imaginary users */
+    fill_lsh(2);
+
+    /* Find 2 recommendations for all real users */
+    lsh_find_recs(2, *(this->i_dataset));
 }
 
 void r_service::fill_r_dataset(){
+    /* Check if r_dataset is not yet filled */
     if(this->r_dataset != NULL){
         return;
     }
 
+    /* Place every real user's sentiment's vector in dataset */
     this->r_dataset = new dataset<double>();
     for(unsigned int i = 0; i < users.size(); i++){
         user* cur_user = users[i];
@@ -336,12 +361,13 @@ void r_service::fill_r_dataset(){
 }
 
 void r_service::fill_i_dataset(){
+    /* Check if i_dataset is not yet filled */
     if(this->i_dataset != NULL){
         return;
     }
 
+    /* Place every imaginary user's sentiment's vector in dataset */
     this->i_dataset = new dataset<double>();
-
     for(unsigned int i = 0; i < im_users.size(); i++){
         user* cur_user = im_users[i];
         i_dataset->add_vector(*cur_user);
@@ -349,31 +375,38 @@ void r_service::fill_i_dataset(){
 }
 
 void r_service::init_lsh(){
+    /* if not define use default L and k for lsh */
+    int L = DEFAULT_L; 
+    int k = DEFAULT_K;
+
+    /* Check if lsh already created */
     if(this->lsh != NULL){
         cout << "Error. LSH already created. Abort" << endl;
         return;
-
     }
-    int L = DEFAULT_L;
-    int k = DEFAULT_K;
     
+    /* Use L if defined */
     #ifdef __L
         L = __L;
     #endif
     
+    /* Use k if defined */
     #ifdef __K
         k = __K
     #endif
 
+    /* Create lsh using cosine metric and given L/k */
     this->lsh = new LSH<double>(2, L, k, 0);
 }
 
 void r_service::fill_lsh(int flag){
+    /* Check if lsh is initialized */
     if(this->lsh == NULL){
         cout << "Error. LSH not initialized yet" << endl;
         return;
     }
 
+    /* REAL USERS */
     if(flag == 1){ // import real users to lsh
         int n = this->r_dataset->get_counter();
         for(int i = 0; i < n; i++){
@@ -381,6 +414,8 @@ void r_service::fill_lsh(int flag){
                 this->lsh->add_vector(r_dataset->get_item(i));
         }
     }
+
+    /* IMAGINARY USERS */
     else{ // import imaginary users
         int n = this->i_dataset->get_counter();
         for(int i = 0; i < n; i++){
@@ -390,23 +425,148 @@ void r_service::fill_lsh(int flag){
     }
 }
 
-void r_service::lsh_find_recs(int cc_nums){
-    ofstream out("outPut");
+void r_service::lsh_find_recs(int cc_nums, dataset<double>& data){
+    
+    /* Find recommendations for all users */
     int num_of_users = users.size();
     for(int i = 0; i < num_of_users; i++){
-        user* usr = users[i];
-        out << usr->get_id() << " ";
+        user* usr = users[i]; // get current user
+        this->out << usr->get_id() << " "; 
 
+        /* Check if zero vector, so no recommendations */
         if(usr->get_zero_vec() == 1){ // zero vec
-            out << "Not enough information about user" << endl;
+            this->out << "Not enough information about user" << endl;
             continue;
         }
+
+        /* Turn user to query in order to insert as query in lsh */
         vector_item<double>& query = *(this->r_dataset->get_item(i));
-        unordered_set<int> neighs;
+        unordered_set<int> neighs; // all neighbours will be kept here
 
+        /* Get all neighbours in all tables */
         this->lsh->get_neighbours(query, neighs);
-        out << endl;
-
         
+        /* Keep P nearest neighbours */
+        vector<int> p_nearest; // P nearest neighbours will be placed here
+        this->get_P_nearest(query, neighs, data, p_nearest);
+        
+        /* Having the p_nearest neighbours, find recommendations and print */
+        this->calc_similarity(*usr, p_nearest, data, cc_nums);
+
+        this->out << endl;     
     }
+}
+
+void r_service::get_P_nearest(vector_item<double>& query, unordered_set<int>& neighs,
+                              dataset<double>& data, vector<int>& p_nearest){
+    multimap<double, int> distances; // will keep sorted all distances with neighbours
+    pair<double, int> x; // pair to be inserted in multimap each time
+
+    /* Get distances from all neighbours */
+    for(unordered_set<int>::iterator it = neighs.begin(); it != neighs.end(); it++){
+        /* Ger current neighbour */
+        int n_index = *it;
+        vector_item<double>& cur_neigh = *(data.get_item(n_index));
+
+        /* Calculate distance with neighbour */
+        double cur_dist = cs_distance(query, cur_neigh);
+
+        /* Add to sorted map */
+        x.first = cur_dist;
+        x.second = n_index;
+        distances.insert(x);
+    }
+
+    /* Keep P nearest neighbours */
+    int p = 0; // number of neighbours kept so far
+    for(multimap<double, int>::iterator it = distances.begin(); it != distances.end(); it++){
+        p_nearest.push_back(it->second);
+        p++;
+        if(p == this->P)
+            break;
+    }
+}
+
+
+void r_service::calc_similarity(user& query, vector<int> neighbours, dataset<double>& data, int cc_nums){
+    double q_avg = query.get_avg_sentiment(); // avg rating of user
+    vector<double>& q_sentiments = query.get_sentiments(); // current ratings of user
+    vector<int>& q_cryptos = query.get_cryptos(); // cryptos that user has referenced
+    vector<double> z; // sum of absolute of similarities
+    vector<double> sums_sim; // sum of similarites * rating
+
+
+    /* Initialize "rating" for cryptos */
+    for(unsigned int i = 0; i < this->cryptos.size(); i++){
+        z.push_back(0.0);
+        sums_sim.push_back(0.0);
+    }
+
+    /* Calculate similarity with all nn */
+    for(unsigned int i = 0; i < neighbours.size(); i++){
+        user& cur_neighbour = *(this->users[i]); // get neighbour
+
+        /* Get similarity between query and neighbour */
+        double similarity = cs_similarity(query, cur_neighbour);
+
+        /* Get sentiments and avg rating of current neighbour */ 
+        vector<double>& n_sentiments = cur_neighbour.get_sentiments();
+        double n_avg = cur_neighbour.get_avg_sentiment(); // avg rating of neighbour
+
+        /* Get current rating for all unrated cryptos of user */
+        for(unsigned int j = 0; j < q_sentiments.size(); j++){
+            if(q_cryptos[j] == 1) // crypto already rated
+                continue;
+
+            /* Keep abs similarity for coin */
+            z[j] += abs(similarity);
+
+            /* Get similarity * (coin rating - avg rating) */
+            sums_sim[j] += similarity * (n_sentiments[j] - n_avg);
+        }
+    }
+
+    multimap<double, int> coins_ratings; // sorted coins per rating
+    pair<double, int> x;
+
+    /* Calculate "rating" and sort all coins */
+    for(unsigned int i = 0; i < cryptos.size(); i++){
+        if(q_cryptos[i] == 1) // crypto already rated
+            continue;
+
+        sums_sim[i] = q_avg + ((double(1) / z[i]) * sums_sim[i]);
+        x.first = sums_sim[i];
+        x.second = i;
+
+        coins_ratings.insert(x);
+    }
+
+    /* Recommend top coins */ 
+    int num = 0;
+    multimap<double, int>::iterator it;
+    for(it = coins_ratings.begin(); it != coins_ratings.end(); it++){
+        this->out << "\"" << this->cryptos[it->second]->get_name() << "\" ";
+        num++;
+
+        q_sentiments[it->second] = 1; // mark as already recommended
+        /* Check if recommended enough coins */
+        if(num == cc_nums)
+            break;
+    }
+
+    /* If not enough coins recommended, recommend some more */
+    if(num != cc_nums){
+        for(unsigned int i = 0; i < q_sentiments.size(); i++){
+            if(q_cryptos[i] == 0){ // not recommended yet
+                this->out << "\"" << this->cryptos[it->second]->get_name() << "\" ";
+                num++;
+
+                q_sentiments[it->second] = 1; // mark as already recommended
+                /* Check if recommended enough coins */
+                if(num == cc_nums)
+                    break;
+            } 
+        }
+    }
+
 }

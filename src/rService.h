@@ -28,6 +28,8 @@
 /* r_service */
 class r_service{
     private:
+        int P; // number of nearest neighbours
+        std::ofstream out;
         std::vector<user*> users; // all users that tweeted
         std::vector<user*> im_users; // all imaginary users created from clustering tweets
         std::vector<tweet*> tweets; // all the tweets
@@ -100,16 +102,30 @@ class r_service{
         /* Evaluate sentiments for all imaginary users registered, according to their tweets */
         void eval_im_users();
 
+
+        /* Problem 1 - Using LSH find 5 recommendations for all users */
         void lsh_recommend();
+
         /* Place all real users' sentiment score in dataset as vector */
         void fill_r_dataset();
 
         /* Place all imaginary users' sentiment score in dataset as vector */
         void fill_i_dataset();
 
+        /* Initialize lsh with given settings for coins recommendations */
         void init_lsh();
         
+        /* Fill lsh with a dataset. If given int equals 1: place real users, 2: imaginary */
+        /* Only non-zero vectors are placed in lsh */
         void fill_lsh(int);
 
-        void lsh_find_recs(int); // find lsh recommendation
+        /* Given the number of recomendations and the dataset used in lsh, find for every */
+        /* real user recommendations, and print them in the output file provided during execution */ 
+        void lsh_find_recs(int, dataset<double>&); // find lsh recommendation
+
+        /* Given a vector of user, neighbours and their dataset, find P nearest and place them sorted in vector */
+        void get_P_nearest(vector_item<double>&, std::unordered_set<int>&, dataset<double>&, std::vector<int>&);
+
+        /* Given user, it's nn and the dataset that are placed, use cosine similarity to recommend coins to user */
+        void calc_similarity(user&, std::vector<int>, dataset<double>&, int);
 };

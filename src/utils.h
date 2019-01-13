@@ -122,6 +122,8 @@ double eucl_distance(vector_item<T>&, vector_item<T>&);
 template <class T>
 double cs_distance(vector_item<T>&, vector_item<T>&);
 
+double cs_similarity(user&, user&);
+
 /* Given a specific vector and it's cluster, finds and returns the index of    */
 /* the second best cluster for it using the distance function(metric) provided */
 template <class T>

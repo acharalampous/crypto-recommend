@@ -43,7 +43,7 @@ class LSH{
         /* Finds ANN of given vector, searching in all hash tables */
         void findANN(vector_item<T>&, float, float&, std::string&, std::ofstream&);
 
-        void get_neighbours(vector_item<T>&, std::unordered_set<int>);
+        void get_neighbours(vector_item<T>&, std::unordered_set<int>&);
 
         /* Computes and returns the total size of the lsh struct */
         long int get_total_size();

@@ -643,6 +643,35 @@ double cs_distance(vector_item<T>& vec1, vector_item<T>& vec2){
 	return dist;
 }
 
+double cs_similarity(user& usr1, user& usr2){
+	/* Compute ( (vec1 * vec2) / (||vec1||*||vec2||) ) */
+ 	vector<double>& arr1 = usr1.get_sentiments();
+    vector<double>& arr2 = usr2.get_sentiments();
+     
+    if(arr1.size() != arr2.size()){
+		cout << "Invalid dimensions" << endl;
+		exit(0);
+	}
+
+	double similarity;
+	double euc_dist = 0.0;
+	double arr1_norm = 0.0;
+	double arr2_norm = 0.0;
+
+	for(unsigned int i = 0; i < arr1.size(); i++){
+		euc_dist += (arr1[i] * arr2[i]); // vec1 & vec2
+		arr1_norm += arr1[i] * arr1[i]; // ||vec1||
+		arr2_norm += arr2[i] * arr2[i]; // ||vec2||
+	}
+
+	arr1_norm = sqrt(arr1_norm);
+	arr2_norm = sqrt(arr2_norm);
+
+	similarity = euc_dist / (arr1_norm * arr2_norm);
+
+	return similarity;
+}
+
 template <class T>
 int get_second_best(vector_item<T>& query, int cl_num, vector<cluster<T>*>& clusters, dist_func& dist){
     int sec_best = cl_num; // index of the second best cluster for query to be placed

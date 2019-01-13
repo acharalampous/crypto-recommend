@@ -159,7 +159,7 @@ void LSH<T>::findANN(vector_item<T>& query, float radius, float& min_dist, strin
 }
 
 template <class T>
-void LSH<T>::get_neighbours(vector_item<T>& query, unordered_set<int> neighs){
+void LSH<T>::get_neighbours(vector_item<T>& query, unordered_set<int>& neighs){
     for(unsigned int i = 0; i < cs_tables.size(); i++){
         cs_tables[i]->get_neighbours(query, neighs);
     }
