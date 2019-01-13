@@ -311,7 +311,7 @@ void cluster<T>::print_to_file(ofstream& out){
         out << centroid->get_id() << "}" << endl;
     }
     else{ // must print its points */
-        std::array<double, D>& coordinates = centroid->get_points(); // points of vector
+        vector<double>& coordinates = centroid->get_points(); // points of vector
         out << coordinates[0]; 
         for(int i = 1; i < D; i++)
             out << ", " << coordinates[i];

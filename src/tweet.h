@@ -69,7 +69,8 @@ class user{
         int user_type; // 1: real user, 2: imaginary user[from clustering]
         std::vector<double> sentiments; // sentiment for each currency [uj]
         std::vector<int> tweets; // index of each tweet of user
-        std::unordered_set<int> cryptos; // index of each crypto, the user referenced
+        std::vector<int> cryptos; // index of each crypto, the user referenced is 1, else 0
+        int zero_vec; // 1: all sentiments are zero, 0: at least one non-zero sentiment 
     public:
         /* Con-De Structor */
         user(int, int, int); // given the user id and index create a new user
@@ -81,7 +82,8 @@ class user{
         int get_type();
         std::vector<double>& get_sentiments();
         std::vector<int>& get_tweets();
-        std::unordered_set<int>& get_cryptos();
+        std::vector<int>& get_cryptos();
+        int get_zero_vec();
 
         void add_tweet(int); // add to user the given tweet's index
 

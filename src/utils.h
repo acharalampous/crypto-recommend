@@ -100,7 +100,7 @@ int hamming_dist(int, int);
 
 /* Given two arrays(vectors), calculates and returns their inner product */  
 template <class T>
-float vector_product(std::array<float,D>&, std::array<T, D>&);
+float vector_product(std::vector<float>&, std::vector<T>&);
 
 /* Given a number of integers, concantetates them and returns the value */
 long long int h_concantenate(std::vector<int>&);
@@ -148,6 +148,7 @@ int new_execution(std::ifstream&, std::ifstream&, std::ofstream&);
 
 /* Search given set if contains string(item_id). Returns 1 if exists, else 0 */
 int in_set(std::unordered_set<std::string>&, std::string&);
+int in_set(std::unordered_set<int>&, int);
 
 /* Performs exchausting search in the given dataset using the metric provided */
 /* Finally returns the minimum distance */

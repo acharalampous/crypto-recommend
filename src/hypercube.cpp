@@ -87,7 +87,7 @@ void hypercube<T>::add_vector(vector_item<T>* new_vector){
     if(metric == 1){ // use euclidean
         k = eu_table->get_k(); // get number of hash functions
         vector<int>* hvalues = new vector<int>;
-        array<T, D>& vec = new_vector->get_points();
+        vector<T>& vec = new_vector->get_points();
 
         for(int i = 0; i < k; i++){
             /* Get hash function value */
@@ -190,7 +190,7 @@ void hypercube<T>::findANN(vector_item<T>& query, float radius, float& min_dist,
     if(metric == 1){ // euclidean will be used
         int k = eu_table->get_k(); // get number of hash functions
 
-        array<T, D>& vec = query.get_points();
+        vector<T>& vec = query.get_points();
         
         /* Find bucket num of query */
         int bucket_num = 0;
@@ -294,7 +294,7 @@ void hypercube<T>::findANN(vector_item<T>& query, float radius, float& min_dist,
         int f = 0; // f(p) function <-> bucket index 
 	
         /* Get vector points */
-        array<T, D>* vec_points = &(query.get_points());
+        vector<T>* vec_points = &(query.get_points());
 
         /* Get all hash functions values */
         for(int i = 0; i < k; i++){

@@ -419,13 +419,13 @@ template <class T>
 vector_item<T>* cl_update_kmeans<T>::get_new_centroid(cluster<T>& cl){
     /* New centroid will not be in dataset, so create a new one */
     vector_item<T>* new_centroid = new vector_item<T>;
-    array<T, D>& coordinates = new_centroid->get_points();
+    vector<T>& coordinates = new_centroid->get_points();
 
     /* Get number of vectors in cluster + centroid */
     int num_of_vectors = cl.get_size() + 1;
     
     /* Get old centroid and add to new centroid */
-    array<T, D>& old_coord = (cl.get_centroid())->get_points();
+    vector<T>& old_coord = (cl.get_centroid())->get_points();
     for(int j = 0; j < D; j++)
         coordinates[j] += old_coord[j];
 
@@ -434,7 +434,7 @@ vector_item<T>* cl_update_kmeans<T>::get_new_centroid(cluster<T>& cl){
     for(int i = 0; i < num_of_vectors - 1; i++){
 
         /* Get current vector from cluster */
-        array<T, D>& curr_coord = (cl.get_vector(i))->get_points();
+        vector<T>& curr_coord = (cl.get_vector(i))->get_points();
         for(int j = 0; j < D; j++){
             coordinates[j] += curr_coord[j];
         }

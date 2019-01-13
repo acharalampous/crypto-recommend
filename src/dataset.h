@@ -11,7 +11,7 @@
 #include <array>
 #include <vector>
 
-#define D 203 // number of dimensions
+extern int D; // number of dimensions
 
 #include "tweet.h"
 
@@ -24,7 +24,7 @@ class vector_item{
     private:
         int index; // index of vector_item in dataset(container)
         std::string item_id; // name of vector
-        std::array<T, D> coordinates; // points of vector
+        std::vector<T> coordinates; // points of vector
     public:
         /* Given the points of vector,id and index, create a new vector_item */
         vector_item(std::string&, int);
@@ -36,7 +36,7 @@ class vector_item{
 
         /* Accessors */
         std::string& get_id(); // returns id as string
-        std::array<T, D>& get_points(); // returns an array with all the points of vector
+        std::vector<T>& get_points(); // returns an array with all the points of vector
         int get_size(); // returns size of vector
         int get_index(); // return index of vector in dataset
                 

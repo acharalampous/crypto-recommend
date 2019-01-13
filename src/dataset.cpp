@@ -22,6 +22,7 @@ template class vector_item<double>;
 template class dataset<int>;
 template class dataset<double>;
 
+int D = 203;
 
 /*  Implementation of all functions of dataset
  *  and vector_item. Definitions found in
@@ -54,15 +55,18 @@ vector_item<T>::vector_item(string& new_vector, int index){
                 if(i >= D){
                     throw out_of_range("Out_of_range");
                 }
-                coordinates[i++] = stod(new_vector.substr(str_start, str_end - str_start));
+                coordinates.push_back(stod(new_vector.substr(str_start, str_end - str_start)));
+                i++;
             }
 
             str_start = str_end + 1; // move to next point
             
         }
         
-        if (str_start < new_vector.length())
-            coordinates[i++] = stod(new_vector.substr(str_start, string::npos));
+        if (str_start < new_vector.length()){
+            coordinates.push_back(stod(new_vector.substr(str_start, string::npos)));
+            i++;
+        }
     }catch(out_of_range& e2){
         cout << "[Creation of vector_item][line of file: " << index + 1 << " || Id of vector: " << this->item_id << " ] Larger number of dimensions in vector given!" << endl;
         cout << "Aborting..." << endl;
@@ -82,7 +86,7 @@ vector_item<T>::vector_item(string& new_vector, int index){
 
 template <class T>
 vector_item<T>::vector_item(user& usr){
-
+    //cout << "Ddd = " << D << endl;
     /* Set index = user index in dataset */
     this->index = usr.get_index();
 
@@ -100,10 +104,10 @@ vector_item<T>::vector_item(user& usr){
     /* Convert vector to array */
     vector<double>& sentiments = usr.get_sentiments();
     for(int i = 0; i < D; i++)
-        this->coordinates[i] = sentiments[i];
+        this->coordinates.push_back(sentiments[i]);
 
 
-    cout << coordinates.size() << endl;
+    //cout << coordinates.size() << endl;
 }
 
 /* Create empty vector_item */
@@ -114,7 +118,7 @@ vector_item<T>::vector_item(){
 
     /* Initialize points in all dimensions*/
     for(int i = 0; i < D; i++)
-        coordinates[i] = 0;
+        coordinates.push_back(0);
 }
 
 /* Returns 1 if same, else 0 */
@@ -138,7 +142,7 @@ string& vector_item<T>::get_id(){
 
 /* Return points array */
 template <class T>
-array<T, D>& vector_item<T>::get_points(){
+vector<T>& vector_item<T>::get_points(){
     return coordinates;
 }
 

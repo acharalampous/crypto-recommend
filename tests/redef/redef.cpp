@@ -1,20 +1,17 @@
 #include <iostream>
 #include <array>
-#define D 5
+#include "r.h"
+
+extern int D;
 
 using namespace std;
 
 int main(void){
-	//cout << D << endl;
-	array<int, D> arr;
-	cout << arr.size() << endl;
-	#undef D
+	cout << "0 " << D << endl;
+	print1();	
 	
+	D = 100;
 
-	#define D 10
-
-	cout << arr.size() << endl;
-
-	cout << D << endl;
-
+	cout << "0 " << D << endl;
+	print2();
 }

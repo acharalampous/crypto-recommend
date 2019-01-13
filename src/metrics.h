@@ -72,12 +72,12 @@ class euclidean_vec{
 template <class T>
 class euclideanHF{
     private:
-        std::array<float, D> v; // random vector
+        std::vector<float> v; // random vector
         float t; // random displacement
     public:
         euclideanHF();
         
-        int getValue(std::array<T ,D>&); // get hash value
+        int getValue(std::vector<T>&); // get hash value
         long int get_size(); // get sizeof euclidean hf in bytes
 
         /* Debugging */
@@ -104,7 +104,7 @@ class euclidean{
         int get_bucket_num(std::vector<int>&);
 
         /* Returns the value of the given hash function for the provided vector */
-        int get_val_hf(std::array<T,D>&, int);
+        int get_val_hf(std::vector<T>&, int);
 
         /* Add new vector to hash table, computing in what bucket to place */ 
         void add_vector(vector_item<T>*);
@@ -144,12 +144,12 @@ class euclidean{
 template <class T>
 class csimilarityHF{
     private:
-        std::array<float, D> r; // random vector
+        std::vector<float> r; // random vector
     public:
         /* Con-De structor */
         csimilarityHF();
         
-        int getValue(std::array<T,D>&); // get hash value
+        int getValue(std::vector<T>&); // get hash value
         long int get_size(); // get size of struct in bytes
 
         /* Debugging */
@@ -183,8 +183,10 @@ class csimilarity{
         /* Given a query vector, finds the nearest neighbours */ 
         void findANN(vector_item<T>&, float, float&, std::string&, std::ofstream&, std::unordered_set<std::string>&);
 
+        void get_neighbours(vector_item<T>&, std::unordered_set<int>&);
+
         /* Returns the value of the hash function given for the provided vector */
-        int get_val_hf(std::array<T,D>&, int);
+        int get_val_hf(std::vector<T>&, int);
 
         /* Accessors */
         int get_k();

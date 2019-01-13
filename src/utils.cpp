@@ -7,6 +7,7 @@
  */
 /********************************/
 #include <iostream>
+#include <vector>
 #include <cmath>
 #include <string>
 #include <sys/stat.h>
@@ -16,8 +17,8 @@
 
 using namespace std;
 
-template float vector_product(std::array<float,D>&, std::array<int ,D>&);
-template float vector_product(std::array<float,D>&, std::array<double, D>&);
+template float vector_product(vector<float>&, vector<int>&);
+template float vector_product(vector<float>&, vector<double>&);
 template double eucl_distance(vector_item<double>&, vector_item<double>&);
 template double cs_distance(vector_item<double>&, vector_item<double>&);
 template int get_second_best(vector_item<double>&, int, vector<cluster<double>*>&, dist_func&);
@@ -525,10 +526,10 @@ int hamming_dist(int x, int y){
 
 /* Compute inner product of two vectors */
 template <class T>
-float vector_product(std::array<float, D>& vec1, std::array<T, D>& vec2){
+float vector_product(vector<float>& vec1, vector<T>& vec2){
     float product = 0.0;
 
-    for(unsigned int i = 0; i < D; i++)
+    for(int i = 0; i < D; i++)
         product += vec1[i] * vec2[i];
 
     return product;
@@ -598,8 +599,8 @@ double eucl_distance(vector_item<T>& vec1, vector_item<T>& vec2){
 
 	double dist = 0.0;
 
-	array<T, D>& arr1 = vec1.get_points();
-	array<T, D>& arr2 = vec2.get_points();
+	vector<T>& arr1 = vec1.get_points();
+	vector<T>& arr2 = vec2.get_points();
 
 
 	for(unsigned int i = 0; i < arr1.size(); i++)
@@ -623,8 +624,8 @@ double cs_distance(vector_item<T>& vec1, vector_item<T>& vec2){
 	double arr1_norm = 0.0;
 	double arr2_norm = 0.0;
 
-	array<T, D>& arr1 = vec1.get_points();
-	array<T, D>& arr2 = vec2.get_points();
+	vector<T>& arr1 = vec1.get_points();
+	vector<T>& arr2 = vec2.get_points();
 
 
 	for(unsigned int i = 0; i < arr1.size(); i++){
@@ -892,6 +893,16 @@ int new_execution(ifstream& input, ifstream& query, ofstream& output){
 
 int in_set(unordered_set<string>& check_set, string& id){
     unordered_set<string>::iterator it;
+
+    it = check_set.find(id);
+    if(it == check_set.end()) // id does not exist
+        return 0;
+    else // id is in set
+        return 1; 
+}
+
+int in_set(unordered_set<int>& check_set, int id){
+    unordered_set<int>::iterator it;
 
     it = check_set.find(id);
     if(it == check_set.end()) // id does not exist

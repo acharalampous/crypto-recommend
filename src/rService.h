@@ -17,6 +17,9 @@
 #include "clusters.h"
 #include "lsh.h"
 
+#define __K 4;
+#define __L 5;
+
 /* Implementation of all necessary structs and methods that 
  * will be used in order to implement all the recommendation
  * algorithms and service.
@@ -97,9 +100,16 @@ class r_service{
         /* Evaluate sentiments for all imaginary users registered, according to their tweets */
         void eval_im_users();
 
+        void lsh_recommend();
         /* Place all real users' sentiment score in dataset as vector */
         void fill_r_dataset();
 
         /* Place all imaginary users' sentiment score in dataset as vector */
         void fill_i_dataset();
+
+        void init_lsh();
+        
+        void fill_lsh(int);
+
+        void lsh_find_recs(int); // find lsh recommendation
 };

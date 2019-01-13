@@ -309,6 +309,19 @@ void r_service::eval_im_users(){
     }
 }
 
+void r_service::lsh_recommend(){
+    fill_r_dataset();
+
+
+    fill_i_dataset();
+    
+    init_lsh();
+    
+    fill_lsh(1);
+
+    lsh_find_recs(5);
+}
+
 void r_service::fill_r_dataset(){
     if(this->r_dataset != NULL){
         return;
@@ -317,7 +330,7 @@ void r_service::fill_r_dataset(){
     this->r_dataset = new dataset<double>();
     for(unsigned int i = 0; i < users.size(); i++){
         user* cur_user = users[i];
-        r_dataset->add_vector(*cur_user);
+        r_dataset->add_vector(*cur_user); 
     }
 
 }
@@ -332,5 +345,68 @@ void r_service::fill_i_dataset(){
     for(unsigned int i = 0; i < im_users.size(); i++){
         user* cur_user = im_users[i];
         i_dataset->add_vector(*cur_user);
+    }
+}
+
+void r_service::init_lsh(){
+    if(this->lsh != NULL){
+        cout << "Error. LSH already created. Abort" << endl;
+        return;
+
+    }
+    int L = DEFAULT_L;
+    int k = DEFAULT_K;
+    
+    #ifdef __L
+        L = __L;
+    #endif
+    
+    #ifdef __K
+        k = __K
+    #endif
+
+    this->lsh = new LSH<double>(2, L, k, 0);
+}
+
+void r_service::fill_lsh(int flag){
+    if(this->lsh == NULL){
+        cout << "Error. LSH not initialized yet" << endl;
+        return;
+    }
+
+    if(flag == 1){ // import real users to lsh
+        int n = this->r_dataset->get_counter();
+        for(int i = 0; i < n; i++){
+            if(users[i]->get_zero_vec() != 1) // not a zero vec
+                this->lsh->add_vector(r_dataset->get_item(i));
+        }
+    }
+    else{ // import imaginary users
+        int n = this->i_dataset->get_counter();
+        for(int i = 0; i < n; i++){
+            if(im_users[i]->get_zero_vec() != 1) // not a zero vec
+                this->lsh->add_vector(i_dataset->get_item(i));
+        }
+    }
+}
+
+void r_service::lsh_find_recs(int cc_nums){
+    ofstream out("outPut");
+    int num_of_users = users.size();
+    for(int i = 0; i < num_of_users; i++){
+        user* usr = users[i];
+        out << usr->get_id() << " ";
+
+        if(usr->get_zero_vec() == 1){ // zero vec
+            out << "Not enough information about user" << endl;
+            continue;
+        }
+        vector_item<double>& query = *(this->r_dataset->get_item(i));
+        unordered_set<int> neighs;
+
+        this->lsh->get_neighbours(query, neighs);
+        out << endl;
+
+        
     }
 }

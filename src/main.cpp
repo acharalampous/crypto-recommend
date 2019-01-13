@@ -28,17 +28,10 @@ int main(void){
         return -1;
     }
 
-    cout << "D = " << D << endl;
-    #undef D
-    #define D 100
-
-    cout << "D = " << D << endl;
-
+    D = 100;
 
     
-    recsys->fill_r_dataset();
-    recsys->fill_i_dataset();
-
+    recsys->lsh_recommend();
 
 
     cout << "Deleting Everything" << endl;
