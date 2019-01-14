@@ -29,6 +29,7 @@ class vector_item{
         /* Given the points of vector,id and index, create a new vector_item */
         vector_item(std::string&, int);
         vector_item(user&);
+        vector_item(user&, int);
         vector_item(); // Create an empty vector_item, not placed in dataset
 
         /* If given vector equals to object returns 1, else 0 */
@@ -60,6 +61,8 @@ class dataset{
         
         /* Turn given user's sentiment score to vector_item */
         void add_vector(user&);
+
+        void add_vector(user&, int);
 
         /* Accessors */
         int get_counter();

@@ -375,6 +375,7 @@ cl_management<T>::~cl_management(){
     /* Destroy dataset */
     if(all_vectors != NULL)
         delete this->all_vectors;
+    all_vectors = NULL;
 
     /* Destroy cluster_info for each vector */
     for(unsigned int i = 0; i < vectors_info.size(); i++)
@@ -389,10 +390,15 @@ cl_management<T>::~cl_management(){
     /* Destroy algorithms */
     if(init_algorithm != NULL)
         delete this->init_algorithm;
+    this->init_algorithm = NULL;
     if(assign_algorithm != NULL)
         delete this->assign_algorithm;
+    this->assign_algorithm = NULL;
+
     if(update_algorithm != NULL)
         delete this->update_algorithm;
+    this->update_algorithm = NULL;
+
 }
 
 template <class T>
@@ -471,7 +477,7 @@ void cl_management<T>::fill_dataset(ifstream& input){
 }
 
 template <class T>
-void cl_management<T>::fill_dataset(vector<user*>& users){
+void cl_management<T>::fill_dataset(vector<user*>& users, vector<int>& index_map, unordered_map<int, int>& index_map2){
     
     if(this->all_vectors != NULL){
         cout << "Error. Dataset already created" << endl;
@@ -487,10 +493,16 @@ void cl_management<T>::fill_dataset(vector<user*>& users){
     /* Create new dataset */
     this->all_vectors = new dataset<T>;
 
+    int j = 0;
     int num_of_users = users.size();
     for(int i = 0; i < num_of_users; i++){
-        this->all_vectors->add_vector(*(users[i]));
-        this->vectors_info.push_back(new cluster_info(i));
+        if(users[i]->get_zero_vec() == 0){
+            this->all_vectors->add_vector(*(users[i]), 1);
+            this->vectors_info.push_back(new cluster_info(j));
+            index_map.push_back(i);
+            index_map2[i] = j;
+            j++;        
+        }
     }
 
     /* Check if lsh or hypercube in order to insert all vectors in buckets */
@@ -505,8 +517,9 @@ void cl_management<T>::fill_dataset(vector<user*>& users){
             this->assign_algorithm->init_hc(metric, hf_num, hc_probes, hc_M);
         
         /* Add to lsh/hc */
-        for(int i = 0; i < n; i++)
+        for(int i = 0; i < n; i++){
             assign_algorithm->add_vector(all_vectors->get_item(i));
+        }
     }
 
 

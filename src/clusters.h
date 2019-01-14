@@ -141,7 +141,7 @@ class cl_management{
         void fill_dataset(std::ifstream&);
 
         /* Given vector of user, fill dataset */
-        void fill_dataset(std::vector<user*>&);
+        void fill_dataset(std::vector<user*>&, std::vector<int>&, std::unordered_map<int, int>&);
 
         /* Clustering algorithms */
         void init_clusters(); // init clusters using the algorithm provided

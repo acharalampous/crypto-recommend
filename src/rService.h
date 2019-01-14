@@ -46,8 +46,8 @@ class r_service{
 
         /***** Problem 2 - CLUSTERING RECOMMENDATION *****/
         cl_management<double>* cl_rec; // cluster recommendation
-
-
+        std::vector<int> index_map; // maps cluster dataset index <--> user index
+        std::unordered_map<int, int> index_map2; // maps user index <--> cluster dataset index
     public:
         /* Con-De Structor */
         r_service();
@@ -131,10 +131,10 @@ class r_service{
         void lsh_find_recs(int, dataset<double>&); // find lsh recommendation
 
         /* Given a vector of user, neighbours and their dataset, find P nearest and place them sorted in vector */
-        void get_P_nearest(vector_item<double>&, std::unordered_set<int>&, dataset<double>&, std::vector<int>&, dist_func&);
+        void get_P_nearest(vector_item<double>&, std::unordered_set<int>&, dataset<double>&, std::vector<int>&, dist_func&, int);
 
         /* Given user, it's nn and the dataset that are placed, use cosine similarity to recommend coins to user */
-        void calc_similarity(user&, std::vector<int>, dataset<double>&, int, sim_func&);
+        void calc_similarity(user&, std::vector<int>, std::vector<user*>&, int, sim_func&);
 
 
         /***** Problem 2 *****/

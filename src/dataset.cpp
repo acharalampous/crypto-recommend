@@ -110,6 +110,32 @@ vector_item<T>::vector_item(user& usr){
     //cout << coordinates.size() << endl;
 }
 
+template <class T>
+vector_item<T>::vector_item(user& usr, int index){
+    //cout << "Ddd = " << D << endl;
+    /* Set index = user index in dataset */
+    this->index = index;
+
+    /* Set item_id as R/I N, R for real user and
+       I for imaginary with the index num N */  
+    string type;
+    if(usr.get_type() == 1)
+        type = "R";
+    else
+        type = "I";
+
+    this->item_id = type + to_string(index);
+
+
+    /* Convert vector to array */
+    vector<double>& sentiments = usr.get_sentiments();
+    for(int i = 0; i < D; i++)
+        this->coordinates.push_back(sentiments[i]);
+
+
+    //cout << coordinates.size() << endl;
+}
+
 /* Create empty vector_item */
 template <class T>
 vector_item<T>::vector_item(){
@@ -198,6 +224,15 @@ template<class T>
 void dataset<T>::add_vector(user& usr){
     /* Push new vector */
     vectors.push_back(new vector_item<T>(usr));
+    
+    /* Increase num of vectors */
+    counter++;
+}
+
+template <class T>
+void dataset<T>::add_vector(user& usr, int flag){
+    /* Push new vector */
+    vectors.push_back(new vector_item<T>(usr, counter));
     
     /* Increase num of vectors */
     counter++;
