@@ -31,6 +31,7 @@ r_service::r_service(){
     this->lsh = NULL;
     this->r_dataset = NULL;
     this->i_dataset = NULL;
+    this->cl_rec = NULL;
 }
 
 r_service::~r_service(){
@@ -69,6 +70,9 @@ r_service::~r_service(){
     
     if(i_dataset != NULL)
         delete i_dataset;
+
+    if(cl_rec != NULL)
+        delete cl_rec;
 }
 
 vector<cryptocurrency*>& r_service::get_cryptos(){
@@ -242,7 +246,7 @@ int r_service::create_im_users(){
 }
 
 int r_service::cluster_tweets(){
-    exe_args parameters;
+    exe_args parameters(1);
 
     /* Read config file for clustering settings */
     int result = validate_parameters(parameters);
@@ -446,19 +450,21 @@ void r_service::lsh_find_recs(int cc_nums, dataset<double>& data){
         /* Get all neighbours in all tables */
         this->lsh->get_neighbours(query, neighs);
         
+        dist_func dist = &cs_distance;
         /* Keep P nearest neighbours */
         vector<int> p_nearest; // P nearest neighbours will be placed here
-        this->get_P_nearest(query, neighs, data, p_nearest);
+        this->get_P_nearest(query, neighs, data, p_nearest, dist);
         
+        sim_func sim = &cs_similarity;
         /* Having the p_nearest neighbours, find recommendations and print */
-        this->calc_similarity(*usr, p_nearest, data, cc_nums);
+        this->calc_similarity(*usr, p_nearest, data, cc_nums, sim);
 
         this->out << endl;     
     }
 }
 
 void r_service::get_P_nearest(vector_item<double>& query, unordered_set<int>& neighs,
-                              dataset<double>& data, vector<int>& p_nearest){
+                              dataset<double>& data, vector<int>& p_nearest, dist_func& dist){
     multimap<double, int> distances; // will keep sorted all distances with neighbours
     pair<double, int> x; // pair to be inserted in multimap each time
 
@@ -469,7 +475,7 @@ void r_service::get_P_nearest(vector_item<double>& query, unordered_set<int>& ne
         vector_item<double>& cur_neigh = *(data.get_item(n_index));
 
         /* Calculate distance with neighbour */
-        double cur_dist = cs_distance(query, cur_neigh);
+        double cur_dist = dist(query, cur_neigh);
 
         /* Add to sorted map */
         x.first = cur_dist;
@@ -488,7 +494,7 @@ void r_service::get_P_nearest(vector_item<double>& query, unordered_set<int>& ne
 }
 
 
-void r_service::calc_similarity(user& query, vector<int> neighbours, dataset<double>& data, int cc_nums){
+void r_service::calc_similarity(user& query, vector<int> neighbours, dataset<double>& data, int cc_nums, sim_func& sim){
     double q_avg = query.get_avg_sentiment(); // avg rating of user
     vector<double>& q_sentiments = query.get_sentiments(); // current ratings of user
     vector<int>& q_cryptos = query.get_cryptos(); // cryptos that user has referenced
@@ -504,10 +510,11 @@ void r_service::calc_similarity(user& query, vector<int> neighbours, dataset<dou
 
     /* Calculate similarity with all nn */
     for(unsigned int i = 0; i < neighbours.size(); i++){
-        user& cur_neighbour = *(this->users[i]); // get neighbour
+        int n_index = neighbours[i];
+        user& cur_neighbour = *(this->users[n_index]); // get neighbour
 
         /* Get similarity between query and neighbour */
-        double similarity = cs_similarity(query, cur_neighbour);
+        double similarity = sim(query, cur_neighbour);
 
         /* Get sentiments and avg rating of current neighbour */ 
         vector<double>& n_sentiments = cur_neighbour.get_sentiments();
@@ -569,4 +576,168 @@ void r_service::calc_similarity(user& query, vector<int> neighbours, dataset<dou
         }
     }
 
+}
+
+void r_service::cluster_recommend(){
+    
+    init_cl_rec();
+
+    this->out << "2. Clustering Recommendation - Problem A" << endl;
+    this->out << "----------------------------------------" << endl;
+
+    /* Place real users in dataset to be used in clustering */
+    this->cl_rec->fill_dataset(this->users);
+    
+    /* Cluster real users */
+    cl_rec_clustering();
+
+    /* Find 5 recomendations for all real users */ 
+    cl_find_recs_real();
+
+    delete this->cl_rec;
+    this->cl_rec = NULL;
+    
+    /////////////////////////////////////////////////
+    
+    this->out << endl << endl << "==========================================" << endl << endl; 
+
+    this->out << "2. Clustering Recommendation- Problem B" << endl;
+    this->out << "---------------------------------------" << endl;
+
+    init_cl_rec();
+
+    /* Place real users in dataset to be used in clustering */
+    this->cl_rec->fill_dataset(this->im_users);
+    
+    /* Cluster real users */
+    cl_rec_clustering();
+
+    /* Find 5 recomendations for all real users */ 
+    cl_find_recs_im();
+}
+
+int r_service::init_cl_rec(){
+    exe_args parameters(2);
+
+    /* Read config file for clustering settings */
+    int result = validate_parameters(parameters);
+    if(result == -1){
+        cout << "Error with clustering parameters" << endl;
+        return -1;
+    }
+    else if(result == -3){
+        printValidConfig();
+        return -2;
+    }
+
+    int init = parameters.init;
+    int assign = parameters.assign;
+    int upd = parameters.upd;
+    
+    print_exe_details(parameters);
+    this->cl_rec = new cl_management<double>(parameters, init, assign, upd);   
+
+    return 0;
+}
+
+void r_service::cl_rec_clustering(){
+    int i = 0;
+    int max_updates = this->cl_rec->get_max_updates();
+    
+    this->cl_rec->init_clusters();
+
+    this->cl_rec->assign_clusters();
+
+    int made_changes = 1; 
+    while(1){
+        if(made_changes == 0 || i >= max_updates)
+            break;
+
+        made_changes = this->cl_rec->update_clusters();
+        this->cl_rec->assign_clusters();
+        i++;
+    }
+}
+
+void r_service::cl_find_recs_real(){
+    int num_of_users = this->users.size();
+    vector<cluster_info*>& vectors_info = this->cl_rec->get_vectors_info();
+    dataset<double>& data = *(this->cl_rec->get_dataset());
+
+    /* Recommend to all users */
+    for(int i = 0; i < num_of_users; i++){
+        user& usr = *(this->users[i]); // get user
+        this->out << usr.get_id() << " ";
+
+        /* Check if zero vector, so no recommendations */
+        if(usr.get_zero_vec() == 1){ // zero vec
+            this->out << "Not enough information about user" << endl;
+            continue;
+        }
+
+        /* Get number of vector that user belongs to */
+        int cluster_num = vectors_info[i]->get_cluster_num();
+
+        vector_item<double>& query = *(data.get_item(i));
+        unordered_set<int> neighs; // all neighbours will be kept here
+
+        /* Get all neighbours in all tables */
+        this->cl_rec->get_neighbours(query, cluster_num, neighs);
+
+        dist_func dist = &eucl_distance;
+        /* Keep P nearest neighbours */
+        vector<int> p_nearest; // P nearest neighbours will be placed here
+        this->get_P_nearest(query, neighs, data, p_nearest, dist);
+        
+        /* Having the p_nearest neighbours, find recommendations and print */
+        sim_func sim = &eucl_similarity;
+        this->calc_similarity(usr, p_nearest, data, 5, sim);
+
+        this->out << endl;    
+    }
+
+}
+
+
+void r_service::cl_find_recs_im(){
+    int num_of_users = this->users.size();
+    dataset<double>& data = *(this->cl_rec->get_dataset());
+
+    /* Recommend to all users */
+    for(int i = 0; i < num_of_users; i++){
+        user& usr = *(this->users[i]); // get user
+        this->out << usr.get_id() << " ";
+
+        /* Check if zero vector, so no recommendations */
+        if(usr.get_zero_vec() == 1){ // zero vec
+            this->out << "Not enough information about user" << endl;
+            continue;
+        }
+
+        vector_item<double>& query = *(data.get_item(i));
+        unordered_set<int> neighs; // all neighbours will be kept here
+
+        int cluster_num = find_usr_cluster(query);
+
+        /* Get all neighbours in all tables */
+        this->cl_rec->get_neighbours(query, cluster_num, neighs);
+
+        dist_func dist = &eucl_distance;
+        /* Keep P nearest neighbours */
+        vector<int> p_nearest; // P nearest neighbours will be placed here
+        this->get_P_nearest(query, neighs, data, p_nearest, dist);
+        
+        /* Having the p_nearest neighbours, find recommendations and print */
+        sim_func sim = &eucl_similarity;
+        this->calc_similarity(usr, p_nearest, data, 5, sim);
+
+        this->out << endl;    
+    }
+
+}
+
+int r_service::find_usr_cluster(vector_item<double>& query){
+    int num = this->cl_rec->nearest_cl(query);
+
+    return num;
 }

@@ -413,11 +413,14 @@ void cl_management<T>::clustering(exe_args& parameters, int init, int assign, in
     cout << "Done assigning to Clusters." << endl;
 
     cout << "Updating - Assigning until convergence..." << endl;
+    
+    int made_changes = 1;
     while(1){
-        int made_changes = this->update_clusters();
-        this->assign_clusters();
         if(made_changes == 0 || i >= this->max_updates)
             break;
+        made_changes = this->update_clusters();
+        this->assign_clusters();
+        i++;
     }
     cout << "-------------------------------------------------------------------------\n" << endl;
 }
@@ -447,6 +450,48 @@ void cl_management<T>::fill_dataset(ifstream& input){
         this->vectors_info.push_back(new cluster_info(i++));
     }
 
+
+    /* Check if lsh or hypercube in order to insert all vectors in buckets */
+    int assign_alg = assign_algorithm->get_alg_id();
+    if(assign_alg > 1){ // lsh or hc
+        int n = all_vectors->get_counter();
+
+        /* Initialize lsh */
+        if(assign_alg == 2)
+            this->assign_algorithm->init_lsh(metric, L, hf_num, n);
+        else if(assign_alg == 3)
+            this->assign_algorithm->init_hc(metric, hf_num, hc_probes, hc_M);
+        
+        /* Add to lsh/hc */
+        for(int i = 0; i < n; i++)
+            assign_algorithm->add_vector(all_vectors->get_item(i));
+    }
+
+
+}
+
+template <class T>
+void cl_management<T>::fill_dataset(vector<user*>& users){
+    
+    if(this->all_vectors != NULL){
+        cout << "Error. Dataset already created" << endl;
+        exit(-1);
+    }
+
+    if(this->vectors_info.size() != 0){
+        cout << "Error. Vectors info already created" << endl;
+        exit(-1);
+    }
+
+
+    /* Create new dataset */
+    this->all_vectors = new dataset<T>;
+
+    int num_of_users = users.size();
+    for(int i = 0; i < num_of_users; i++){
+        this->all_vectors->add_vector(*(users[i]));
+        this->vectors_info.push_back(new cluster_info(i));
+    }
 
     /* Check if lsh or hypercube in order to insert all vectors in buckets */
     int assign_alg = assign_algorithm->get_alg_id();
@@ -630,3 +675,59 @@ void cl_management<T>::print_to_file(ofstream& out){
 
 }
 
+template <class T>
+void cl_management<T>::get_neighbours(vector_item<double>& query, int cluster_num, unordered_set<int>& neighs){
+    int self_index = query.get_index();
+
+	/* Get cluster that query belongs to */
+	cluster<T>& cl = *(this->clusters[cluster_num]);
+
+    /* Get all vectors in cluster */
+    vector<vector_item<T>*>& cl_vectors = cl.get_vectors();
+
+    /* Firstly check centroid if in dataset */
+    if(cl.get_centroid_type() == 1){
+        vector_item<T>* centroid = cl.get_centroid(); // get current vector
+        int item_index = centroid->get_index(); // get item id
+
+		/* Check if already collected neighbour */
+        if(!in_set(neighs, item_index) && item_index != self_index) 
+            neighs.insert(item_index);
+    }
+
+    int cl_size = cl_vectors.size();
+	/* Get every neighbour in cluster  */
+    for(int i = 0; i < cl_size; i++){
+        vector_item<T>* cur_vec = cl_vectors[i]; // get current vector
+        int item_index = cur_vec->get_index(); // get item id
+
+		/* Check if already collected neighbour */
+        if(!in_set(neighs, item_index) && item_index != self_index) 
+            neighs.insert(item_index);
+	}
+}
+
+template <class T>
+int cl_management<T>::nearest_cl(vector_item<double>& query){
+    vector<cluster<T>*>& clusters = this->get_clusters();    
+    dist_func dist_function = this->get_dist_func();
+
+    double min_distance = 0.0;
+    int cluster_num = -1;
+
+    int k = this->get_k(); // get number of total clusters
+    
+    /* Check for all centroids and find the nearest */
+    for(int j = 0; j < k; j++){
+        vector_item<T>* curr_centroid = clusters[j]->get_centroid();
+
+        /* Get distance and check if minimum */
+        double dist = dist_function(query, *curr_centroid);
+        if(j == 0 || dist <= min_distance){
+            min_distance = dist;
+            cluster_num = j;
+        }
+    }
+
+    return cluster_num;
+}

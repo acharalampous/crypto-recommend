@@ -29,7 +29,8 @@ template float exchausting_s(dataset<int>&, vector_item<int>&, int);
 /*  All functions implementions that are defined in utils.h */
 
 /* Initialize struct with default values */
-exe_args::exe_args(){
+exe_args::exe_args(int type){
+    this->type = type;
     init = 1;
     assign = 1;
     upd = 1;
@@ -41,7 +42,10 @@ exe_args::exe_args(){
     hc_probes = HC_DEFAULT_PROBES;
     hc_M = HC_DEFAULT_M;
     input_file = "";
-    config_file = CONF_FILE;
+    if(this->type == 1)
+        config_file = CONF_FILE1;
+    else
+        config_file = CONF_FILE2;
 }
 
 int get_parameters(int argc, char** argv, exe_args& pars){
@@ -102,8 +106,6 @@ int get_parameters(int argc, char** argv, exe_args& pars){
 }
 
 int validate_parameters(exe_args& pars){
-    
-    /* Get configuration file */
     while(1){ // until correct file is given
             
         /* Check if conf file was provided by parameters */
@@ -144,34 +146,36 @@ int validate_parameters(exe_args& pars){
     }
 
     /* Get input file */
-    while(1){ // until correct input file is given
+    if(pars.type == 1){ // need input file for dataset
+        while(1){ // until correct input file is given
 
-        /* Check if input file was provided by parameters */
-        /* Also in case of re-execution, check if user wants another file to be used */
-        if(pars.input_file.empty()){
-            cout << "Please provide path to input file(dataset), or .. to abort: ";
-            fflush(stdout);
-            getline(cin, pars.input_file);
-            fflush(stdin);
-        }
+            /* Check if input file was provided by parameters */
+            /* Also in case of re-execution, check if user wants another file to be used */
+            if(pars.input_file.empty()){
+                cout << "Please provide path to input file(dataset), or .. to abort: ";
+                fflush(stdout);
+                getline(cin, pars.input_file);
+                fflush(stdin);
+            }
 
-        /* Abort */
-        if(!pars.input_file.compare("..")){ 
-            cout << "No file was given. Abort." << endl;
-            return -1;
-        }
+            /* Abort */
+            if(!pars.input_file.compare("..")){ 
+                cout << "No file was given. Abort." << endl;
+                return -1;
+            }
 
-        /* Check if file exists */
-        struct stat buffer;
-        if(stat (pars.input_file.c_str(), &buffer) != 0){
-            cout << "File " << pars.input_file << " does not exist. Try again." << endl;
-            pars.input_file = "";
-            continue;
+            /* Check if file exists */
+            struct stat buffer;
+            if(stat (pars.input_file.c_str(), &buffer) != 0){
+                cout << "File " << pars.input_file << " does not exist. Try again." << endl;
+                pars.input_file = "";
+                continue;
+            }
+            else{
+                break;
+            }
         }
-        else{
-            break;
-        }
-    }
+    } // get input file
 
 
     /* Validity check */
@@ -641,6 +645,23 @@ double cs_distance(vector_item<T>& vec1, vector_item<T>& vec2){
 	dist = 1 - dist;
 
 	return dist;
+}
+
+double eucl_similarity(user& usr1, user& usr2){
+    /* Compute (1 / 1 + eu_dist) */
+ 	vector<double>& arr1 = usr1.get_sentiments();
+    vector<double>& arr2 = usr2.get_sentiments();
+    
+    double dist = 0.0;
+
+    for(unsigned int i = 0; i < arr1.size(); i++)
+		dist += pow(arr1[i] - arr2[i], 2);
+
+	dist = sqrt(dist);
+    
+    double sim = (double)1 / (1 + dist);
+
+	return sim;
 }
 
 double cs_similarity(user& usr1, user& usr2){

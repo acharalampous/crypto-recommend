@@ -28,10 +28,12 @@ template <class T> class cluster;
 class cluster_info;
 
 typedef double (*dist_func)(vector_item<double>&, vector_item<double>&);
+typedef double (*sim_func)(user&, user&);
 
 /* Struct that holds all the parameters given through command line and config */
 /* file, for the clustering algorithms                                        */
 typedef struct exe_args{
+    int type; // type of clustering, 1: for tweets, 2: for users(problem 2)
     int init; // initializaton algorithm
     int assign; // assign algorithm
     int upd; // update algorithm
@@ -46,7 +48,7 @@ typedef struct exe_args{
     std::string config_file; // configuration file
 
 
-    exe_args();
+    exe_args(int); // given the type of clustering
 
 }exe_args;
 
@@ -122,6 +124,7 @@ double eucl_distance(vector_item<T>&, vector_item<T>&);
 template <class T>
 double cs_distance(vector_item<T>&, vector_item<T>&);
 
+double eucl_similarity(user&, user&);
 double cs_similarity(user&, user&);
 
 /* Given a specific vector and it's cluster, finds and returns the index of    */

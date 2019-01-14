@@ -29,7 +29,7 @@
 class r_service{
     private:
         int P; // number of nearest neighbours
-        std::ofstream out;
+        std::ofstream out; // output file
         std::vector<user*> users; // all users that tweeted
         std::vector<user*> im_users; // all imaginary users created from clustering tweets
         std::vector<tweet*> tweets; // all the tweets
@@ -39,10 +39,14 @@ class r_service{
     
         cl_management<double>* cl_manage; // clustering options for creating fictionary users
 
-        /* Problem 1 - COSINE LSH RECOMMENDATION */
+        /***** Problem 1 - COSINE LSH RECOMMENDATION *****/
         dataset<double>* r_dataset; // real users dataset
         dataset<double>* i_dataset; // imaginary users dataset
         LSH<double>* lsh;
+
+        /***** Problem 2 - CLUSTERING RECOMMENDATION *****/
+        cl_management<double>* cl_rec; // cluster recommendation
+
 
     public:
         /* Con-De Structor */
@@ -103,6 +107,9 @@ class r_service{
         void eval_im_users();
 
 
+
+        /***** Problem 1 *****/
+
         /* Problem 1 - Using LSH find 5 recommendations for all users */
         void lsh_recommend();
 
@@ -124,8 +131,23 @@ class r_service{
         void lsh_find_recs(int, dataset<double>&); // find lsh recommendation
 
         /* Given a vector of user, neighbours and their dataset, find P nearest and place them sorted in vector */
-        void get_P_nearest(vector_item<double>&, std::unordered_set<int>&, dataset<double>&, std::vector<int>&);
+        void get_P_nearest(vector_item<double>&, std::unordered_set<int>&, dataset<double>&, std::vector<int>&, dist_func&);
 
         /* Given user, it's nn and the dataset that are placed, use cosine similarity to recommend coins to user */
-        void calc_similarity(user&, std::vector<int>, dataset<double>&, int);
+        void calc_similarity(user&, std::vector<int>, dataset<double>&, int, sim_func&);
+
+
+        /***** Problem 2 *****/
+
+        void cluster_recommend();
+
+        int init_cl_rec();
+    
+        void cl_rec_clustering();
+
+        void cl_find_recs_real();
+
+        void cl_find_recs_im();
+
+        int find_usr_cluster(vector_item<double>& );
 };

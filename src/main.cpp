@@ -31,8 +31,8 @@ int main(void){
     D = 100;
 
     
-    recsys->lsh_recommend();
-
+    //recsys->lsh_recommend();
+    recsys->cluster_recommend();
 
     cout << "Deleting Everything" << endl;
     delete recsys;

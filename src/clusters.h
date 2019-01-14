@@ -15,7 +15,8 @@
 #include "dataset.h"
 #include "cl_algorithms.h"
 
-#define CONF_FILE "cluster.conf" // configuration file for clustering options
+#define CONF_FILE1 "cluster1.conf" // configuration file for clustering tweets
+#define CONF_FILE2 "cluster2.conf" // configuration file for clustering users - problem 2
 
 template <class T> class cl_init_algorithm;
 template <class T> class cl_assign_algorithm;
@@ -138,7 +139,10 @@ class cl_management{
 
         /* Given a file stream, get all vectors and assign in dataset */
         void fill_dataset(std::ifstream&);
-        
+
+        /* Given vector of user, fill dataset */
+        void fill_dataset(std::vector<user*>&);
+
         /* Clustering algorithms */
         void init_clusters(); // init clusters using the algorithm provided
         void assign_clusters(); // assign vectors to clusters using the assignment algorithm
@@ -163,4 +167,7 @@ class cl_management{
         void print();
         void print_to_file(std::ofstream&);
 
+        void get_neighbours(vector_item<double>&, int, std::unordered_set<int>&);
+
+        int nearest_cl(vector_item<double>&);
 };
