@@ -10,17 +10,31 @@
 
 using namespace std;
 
-int main(void){
+int main(int argc, char* argv[]){
     srand(time(NULL));
-    ifstream cc("files/coins_queries.csv");
-    ifstream lxc("files/vader_lexicon.csv");
-    ifstream tweets("files/tweets_dataset_small.csv");
-    
-    r_service* recsys = new r_service;
 
-    recsys->register_cryptos(cc);
-    recsys->register_words(lxc);
-    recsys->register_tweets(tweets);
+    string f_in = "";
+    string f_lex = "";
+    string f_cn = "";
+    string f_out = "";
+    int val = 0;
+
+    int result = get_parameters(argc, argv, f_in, f_lex, f_cn, f_out, val);
+    if(result != 0){
+        printValidParameters();
+        return result;
+    }
+
+    result = validate_parameters(f_in, f_lex, f_cn, f_out);
+    if(result != 0)
+        return result;
+
+
+    r_service* recsys = new r_service(f_in, f_lex, f_cn, f_out, val);
+
+    recsys->register_cryptos();
+    recsys->register_words();
+    recsys->register_tweets();
 
     recsys->eval_users();
 
@@ -31,14 +45,15 @@ int main(void){
 
     D = 100;
 
-    recsys->get_known_coins();
-    recsys->validation(10);
-    
-    // recsys->lsh_recommend();
-    // recsys->cluster_recommend();
+    if(recsys->get_validate() == 1){
+        recsys->get_known_coins();
+        recsys->validation(10);
+    }
+    else{
+        recsys->lsh_recommend();
+        recsys->cluster_recommend();
 
-
-
+    }
 
     cout << "Deleting Everything" << endl;
     delete recsys;

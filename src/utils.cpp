@@ -54,62 +54,168 @@ val_pair::val_pair(int usr_index, int coin_index, double val){
     this->val = val;
 }
 
-int get_parameters(int argc, char** argv, exe_args& pars){
-    // for (int i = 1; i < argc; i += 2){ // get all parameters
+int get_parameters(int argc, char** argv, string& f_in, string& f_lex, string& f_cn, string& f_out, int& val){
+    for (int i = 1; i < argc; i += 2){ // get all parameters
             
-    //     string par(argv[i]); // get parameter
-    //     if(par.compare("-i") == 0){ // input file provided
-    //         if(!pars.input_file.empty()){ // input file(dataset) is provided twice
-    //             printf("Error in parameters! Input file [-i] is given more than once! Abort.\n");
-    //             return -2;
-    //         }
+        string par(argv[i]); // get parameter
+        if(par.compare("-d") == 0){ // input file provided
+            if(!f_in.empty()){ // input file(dataset) is provided twice
+                printf("Error in parameters! Input file [-d] is given more than once! Abort.\n");
+                return -2;
+            }
 
-    //         pars.input_file = argv[i + 1];
+            f_in = argv[i + 1];
         
-    //     } // end if -i
-    //     else if(par.compare("-c") == 0){ // configuration file parameter
-    //         if(!pars.config_file.empty()){ // port given twice
-    //             printf("Error in parameters! Configuration file [-c] is given more than once! Abort.\n");
-    //             return -2;
-    //         }
+        } // end if -d
+        else if(par.compare("-l") == 0){ // lexicon file parameter
+            if(!f_lex.empty()){ 
+                printf("Error in parameters! File containing lexicon [-l] is given more than once! Abort.\n");
+                return -2;
+            }
             
-    //             pars.config_file = argv[i + 1];
-    //     } // end if -c
-    //     else if(par.compare("-o") == 0){ // output file parameter
-    //         if(!pars.output_file.empty()){ // output file twice
-    //             printf("Error in parameters! Output file [-o] is given more than once! Abort.\n");
-    //             return -2;
-    //         }
+            f_lex = argv[i + 1];
+        } // end if -l
+        else if(par.compare("-o") == 0){ // output file parameter
+            if(!f_out.empty()){ // output file twice
+                printf("Error in parameters! Output file [-o] is given more than once! Abort.\n");
+                return -2;
+            }
 
-    //         pars.output_file = argv[i + 1];
-    //     } // end if -o
-    //     else if(par.compare("-d") == 0) { // metric parameter
-    //         if(!isNumber(argv[i + 1])){ // metric parameter given is not a number
-    //             printf("Error in parameters! Metric [-d] given is not a valid number. Should be 1 or 2. Abort\n");
-    //             return -2;
-    //         }
+            f_out = argv[i + 1];
+        } // end if -o
+        else if(par.compare("-c") == 0){ // coins file parameter
+            if(!f_cn.empty()){ // output file twice
+                printf("Error in parameters! Coins file [-c] is given more than once! Abort.\n");
+                return -2;
+            }
 
-    //         pars.metric = atoi(argv[i + 1]);
-    //         if(pars.metric != 1 && pars.metric != 2){ // invalid number
-    //             printf("Error in parameters! Metric [-d] given is not a valid number. Should be 1 or 2. Abort\n");
-    //             return -2;
-    //         }
-    //     } // end if -d
-    //     else if(par.compare("-complete") == 0){ // complete parameter
-    //         pars.complete = 1;
-    //         i--;
-    //     } // end if -complete
-    //     else if(par.compare("-1c") == 0){ // only one combination
-    //         pars.all_combinations = 0;
-    //         i--;
-    //     }
-    //     else{
-    //         printf("Error in parameters. Unknown parameter given [%s]. Abort.\n", argv[i]);
-    //         return -2;
-    //     } // end switch
-    // } // end for
+            f_cn = argv[i + 1];
+        } // end if -c
+        else if(par.compare("-validate") == 0){ // validation parameter      
+            val = 1;
+            i--;
+        } // end if -complete
+        else{
+            printf("Error in parameters. Unknown parameter given [%s]. Abort.\n", argv[i]);
+            return -2;
+        } // end switch
+    } // end for
     return 0;
 }
+
+int validate_parameters(string& f_in, string& f_lex, string& f_cn, string& f_out){
+    while(1){ // until correct input file is given
+
+        /* Check if input file was provided by parameters */
+        if(f_in.empty()){
+            cout << "Please provide path to input file(tweets), or .. to abort: ";
+            fflush(stdout);
+            getline(cin, f_in);
+            fflush(stdin);
+        }
+
+        /* Abort */
+        if(!f_in.compare("..")){ 
+            cout << "No input file was given. Abort." << endl;
+            return -1;
+        }
+
+        /* Check if file exists */
+        struct stat buffer;
+        if(stat (f_in.c_str(), &buffer) != 0){
+            cout << "File " << f_in << " does not exist. Try again." << endl;
+            f_in = "";
+            continue;
+        }
+        else{
+            break;
+        }
+    }
+
+    while(1){ // until correct lexicon file is given
+
+        /* Check if input file was provided by parameters */
+        if(f_lex.empty()){
+            cout << "Please provide path to lexicon file, or .. to abort: ";
+            fflush(stdout);
+            getline(cin, f_lex);
+            fflush(stdin);
+        }
+
+        /* Abort */
+        if(!f_lex.compare("..")){ 
+            cout << "No lexicon file was given. Abort." << endl;
+            return -1;
+        }
+
+        /* Check if file exists */
+        struct stat buffer;
+        if(stat (f_lex.c_str(), &buffer) != 0){
+            cout << "File " << f_lex << " does not exist. Try again." << endl;
+            f_lex = "";
+            continue;
+        }
+        else{
+            break;
+        }
+    }
+
+    while(1){ // until correct coins file is given
+
+        /* Check if input file was provided by parameters */
+        if(f_cn.empty()){
+            cout << "Please provide path to coins file, or .. to abort: ";
+            fflush(stdout);
+            getline(cin, f_cn);
+            fflush(stdin);
+        }
+
+        /* Abort */
+        if(!f_cn.compare("..")){ 
+            cout << "No coins tag file was given. Abort." << endl;
+            return -1;
+        }
+
+        /* Check if file exists */
+        struct stat buffer;
+        if(stat (f_cn.c_str(), &buffer) != 0){
+            cout << "File " << f_cn << " does not exist. Try again." << endl;
+            f_cn = "";
+            continue;
+        }
+        else{
+            break;
+        }
+    }
+    
+    /* Get output file */
+    while(1){ // until correct file is given
+
+        /* Check if output file was provided by parameters */
+        if(f_out.empty()){
+            cout << "Please provide path to output file, or .. to abort: ";
+            fflush(stdout);
+            getline(cin, f_out);
+            fflush(stdin);
+        }
+
+        /* Abort */
+        if(!f_out.compare("..")){
+            cout << "No output file was given. Abort." << endl;
+            return -1;
+        }
+
+        ofstream output(f_out); // open file provided 
+        if(output.is_open()){ // file was succesfully opened
+            output.close();
+            break;
+        }
+    }
+
+    return 0;
+
+}
+
 
 int validate_parameters(exe_args& pars){
     while(1){ // until correct file is given
@@ -308,15 +414,15 @@ int read_config_file(ifstream& conf_file, exe_args& pars){
 void printValidParameters(){
     cout << "\n*Execute again providing (optionally) the following parameters:" << endl;
     cout << "\t-i inputFile" << endl;
-    cout << "\t-c configFile" << endl;
+    cout << "\t-l lexiconFile" << endl;
     cout << "\t-o outputFile" << endl;
-    cout << "\t-d metric" << endl;
-    cout << "\t-complete" << endl;
-    cout << "-inputFile: Path to the dataset file" << endl;
-    cout << "-configFile: Path to the config file" << endl;
-    cout << "-outputFile: Path to the output file" << endl;
-    cout << "-metric: 1 for euclidean or 2 for cosine" << endl;
-    cout << "-complete: Print full info for clusters" << endl;
+    cout << "\t-c coinsFile" << endl;
+    cout << "\t-validate" << endl;
+    cout << "-inputFile: Path to the tweets file." << endl;
+    cout << "-lexiconFile: Path to the lexicon-sentiment file." << endl;
+    cout << "-outputFile: Path to the output file." << endl;
+    cout << "-coinsFile: Path to the coins' tag file." << endl;
+    cout << "-validate: Validation algorithms." << endl;
 }
 
 void printValidConfig(){

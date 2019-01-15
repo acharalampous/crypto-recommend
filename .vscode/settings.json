@@ -35,6 +35,7 @@
         "utility": "cpp",
         "ctime": "cpp",
         "list": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "cstdarg": "cpp"
     }
 }

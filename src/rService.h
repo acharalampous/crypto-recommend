@@ -17,8 +17,14 @@
 #include "clusters.h"
 #include "lsh.h"
 
+#define DEFAULT_P 20
 #define __K 4;
 #define __L 5;
+
+struct val_pair;
+typedef double (*dist_func)(vector_item<double>&, vector_item<double>&);
+typedef double (*sim_func)(user&, user&);
+
 
 /* Implementation of all necessary structs and methods that 
  * will be used in order to implement all the recommendation
@@ -29,6 +35,10 @@
 class r_service{
     private:
         int P; // number of nearest neighbours
+        int validate; // 1: validate algorithm, 0: recommend coins
+        std::ifstream input; // input file
+        std::ifstream l_file; // lexicon file
+        std::ifstream c_file; // coins tags file         
         std::ofstream out; // output file
         std::vector<user*> users; // all users that tweeted
         std::vector<user*> im_users; // all imaginary users created from clustering tweets
@@ -61,14 +71,14 @@ class r_service{
     
     public:
         /* Con-De Structor */
-        r_service();
+        r_service(std::string&, std::string&, std::string&, std::string&, int&);
         ~r_service();
 
         /* Accessors */
         std::vector<cryptocurrency*>& get_cryptos(); // get cryptos vector
         std::unordered_map<std::string, cryptocurrency*>& get_crypto_tags(); // get crypto tags map
         std::unordered_map<std::string, double>& get_lexicon(); // get all words map
-
+        int get_validate();
 
         
         /*  Read and register all cryptocurrencies found in string given.
@@ -79,7 +89,7 @@ class r_service{
                     ...
                     ...
         */
-        void register_cryptos(std::ifstream&);
+        void register_cryptos();
 
         /*  Read and register all words with the sentiment found in string given.
             format: word1 score
@@ -88,7 +98,7 @@ class r_service{
                     ...
                     ...
         */
-        void register_words(std::ifstream&);
+        void register_words();
 
         /*  Read and register all tweets found in string given.
             format: userId TweetId term1 term2 term 3 ...
@@ -96,7 +106,7 @@ class r_service{
                     ...
                     ...
         */
-        void register_tweets(std::ifstream&);
+        void register_tweets();
 
         /* Evaluate sentiments for all users registered, according to their tweets */
         void eval_users();

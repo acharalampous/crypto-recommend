@@ -16,6 +16,7 @@
 #include "dataset.h"
 #include "clusters.h"
 #include "lsh.h"
+#include "rService.h"
 
 template <class T> class cl_management;
 
@@ -72,13 +73,15 @@ typedef struct val_pair{
 
 
 /* Extract parameters that were given during execution */ 
-int get_parameters(int, char**, exe_args&);
+int get_parameters(int, char**, std::string&, std::string&, std::string&, std::string&, int&);
 
 /* Given the parameters from command line, open conf file */
 /* and check for valid parameters. Returns 0 if ok, else  */
 /* -1 for invalid command line parameters or -2 for inv   */
 /* configuration file                                     */
 int validate_parameters(exe_args&);
+int validate_parameters(std::string&, std::string&, std::string&, std::string&);
+
 
 /* Open config file and read all configuration parameters */
 int read_config_file(std::ifstream&, exe_args&);

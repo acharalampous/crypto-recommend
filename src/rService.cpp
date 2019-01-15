@@ -25,9 +25,14 @@ using namespace std;
 /////////////////
 /** r_service **/
 /////////////////
-r_service::r_service(){
-    this->P = 20;
-    this->out.open("outPut1");
+r_service::r_service(string& f_in, string& f_lex, string& f_cn ,string& f_out, int& val){
+    this->P = DEFAULT_P;
+    this->validate = val;
+    this->input.open(f_in);
+    this->l_file.open(f_lex);
+    this->c_file.open(f_cn);
+    this->out.open(f_out);
+
     this->cl_manage = NULL;
     this->lsh = NULL;
     this->r_dataset = NULL;
@@ -92,14 +97,18 @@ unordered_map<string, double>& r_service::get_lexicon(){
     return this->lexicon;
 }
 
-void r_service::register_cryptos(ifstream& cc){
+int r_service::get_validate(){
+    return this->validate;
+}
+
+void r_service::register_cryptos(){
     string line;
     int i = 0; // id of each cryptocurrency
     vector<cryptocurrency*>& cryptos = this->get_cryptos();
     unordered_map<string, cryptocurrency*>& crypto_tags = this->get_crypto_tags();
 
     /* Scan whole file */
-    while(getline(cc, line)){
+    while(getline(c_file, line)){
         int j = 0; // num of tag
         size_t pos, prev = 0;
         string tag; // cryptocurrency tag
@@ -139,11 +148,11 @@ void r_service::register_cryptos(ifstream& cc){
     }
 }
 
-void r_service::register_words(ifstream& lxc){
+void r_service::register_words(){
     string line;
     
     /* Scan whole lexicon and store every word found */
-    while(getline(lxc, line)){
+    while(getline(l_file, line)){
         size_t prev = 0, pos;
         string word;
 
@@ -166,29 +175,48 @@ void r_service::register_words(ifstream& lxc){
 }
 
 
-void r_service::register_tweets(ifstream& tweets){
+void r_service::register_tweets(){
     string line;
     string prev_id = ""; // keep to check fo new user
     string user_id; // current tweet's user
     int tweet_id;
     string t_content; // tweet content
     user* cur_user = NULL;
+    int flag = -1; // 
+
+    int total_tweets = 0;
+    /* Scan first line for P parameter, if not given use default */
+    getline(input, line);
+    try{
+        /* Clear /r if exists at end of line */
+        if (line[line.size() - 1] == '\r')
+            line.erase(line.size() - 1);
+
+        if(line.compare(0, 2, "P:") == 0){ // P parameter was provided
+            this->P = stoi(line.substr(2, line.length() - 2));
+            flag = 1;
+        }
+        else{
+            total_tweets++;
+        }
+    }catch(invalid_argument& e1){}
 
     /* Get number of tweets and make space for them in vector*/
-    int total_tweets = 0;
-    while(getline(tweets, line))
+    while(getline(input, line))
         total_tweets++;
 
     this->tweets.resize(total_tweets + 1); // +1 in order to place each tweet to the exact index with its id
 
     /* Read file again from start */
-    tweets.clear();
-    tweets.seekg(0, ios::beg);
+    input.clear();
+    input.seekg(0, ios::beg);
 
+    if(flag == 1)
+        getline(input, line); // skip P definition
 
     int index = 0;
     /* Scan whole file and store every tweet found */
-    while(getline(tweets, line)){
+    while(getline(input, line)){
         size_t prev = 0, pos;
 
         /* Clear /r if exists at end of line */
