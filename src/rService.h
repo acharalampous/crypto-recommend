@@ -48,6 +48,17 @@ class r_service{
         cl_management<double>* cl_rec; // cluster recommendation
         std::vector<int> index_map; // maps cluster dataset index <--> user index
         std::unordered_map<int, int> index_map2; // maps user index <--> cluster dataset index
+    
+        /****** Validation *****/
+        std::vector<val_pair*> known_set;
+        double total_MAE1; // total mean absolute error
+        double total_MAE2; // total mean absolute error
+        double total_MAE3; // total mean absolute error
+        double total_MAE4; // total mean absolute error
+        double tmp_MAE; // total mean absolute error
+
+        int fold_num;
+    
     public:
         /* Con-De Structor */
         r_service();
@@ -150,4 +161,22 @@ class r_service{
         void cl_find_recs_im();
 
         int find_usr_cluster(vector_item<double>& );
+
+        /***** Validation *****/
+        /* Gather from all users, all the known coins values. Fill known_set with pairs of usr-coin and value */
+        void get_known_coins();
+
+        void validation(int);
+
+        void get_subset_indexes(std::vector<std::pair<int, int>>&);
+
+        void lsh_find_recs(int, dataset<double>&, std::unordered_map<int, std::vector<std::pair<int,double>>>&);
+
+        void calc_similarity(user&, std::vector<int>, std::vector<user*>&, sim_func&, std::vector<std::pair<int,double>>&);
+
+        void reset_coins(int, int);
+
+        void cl_find_recs_real(std::unordered_map<int, std::vector<std::pair<int,double>>>&);
+        void cl_find_recs_im(std::unordered_map<int, std::vector<std::pair<int,double>>>&);
+
 };

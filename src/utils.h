@@ -61,6 +61,16 @@ typedef struct vector_check{
 }vector_check;
 
 
+typedef struct val_pair{
+    int usr_index; // user index in dataset
+    int coin_index; // index of coin
+    double val; // value of coin
+
+    val_pair(int, int, double);
+
+}val_pair;
+
+
 /* Extract parameters that were given during execution */ 
 int get_parameters(int, char**, exe_args&);
 

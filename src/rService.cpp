@@ -11,6 +11,7 @@
 #include <string>
 #include <map>
 #include <random>
+#include <ctime>
 
 #include "rService.h"
 #include "lsh.h"
@@ -73,6 +74,10 @@ r_service::~r_service(){
 
     if(cl_rec != NULL)
         delete cl_rec;
+
+    for(unsigned int i = 0; i < known_set.size(); i++)
+        delete known_set[i];
+    known_set.clear();
 }
 
 vector<cryptocurrency*>& r_service::get_cryptos(){
@@ -663,7 +668,7 @@ int r_service::init_cl_rec(){
     int assign = parameters.assign;
     int upd = parameters.upd;
     
-    print_exe_details(parameters);
+    //print_exe_details(parameters);
     this->cl_rec = new cl_management<double>(parameters, init, assign, upd);   
 
     return 0;
@@ -772,4 +777,381 @@ int r_service::find_usr_cluster(vector_item<double>& query){
     int num = this->cl_rec->nearest_cl(query);
 
     return num;
+}
+
+void r_service::get_known_coins(){
+    int num_of_users = this->users.size();
+
+    /* Check all users */
+    for(int i = 0; i < num_of_users; i++){
+        user& usr = *(this->users[i]);
+        if(usr.get_zero_vec() == 1)
+            continue;     
+
+        /* Get user's coins and their sentiment */
+        vector<int>& usr_coins = usr.get_cryptos();
+        vector<double>& usr_sentiments = usr.get_sentiments();
+
+        int num_of_coins = usr_coins.size();
+
+        /* Check all coins and gather know values */
+        for(int j = 0; j < num_of_coins; j++){
+            if(usr_coins[j] == 1){
+                double val = usr_sentiments[j];
+                
+                int r; // random place in known set
+                if(known_set.size() == 0)
+                    r = 0; 
+                else
+                    r = rand() % (known_set.size() + 1); 
+
+                this->known_set.insert(known_set.begin() + r, (new val_pair(i, j, val)));
+            }
+        }
+    }
+}
+
+
+void r_service::validation(int ffold_num){
+    /* Maps index of users with index of coins */
+    unordered_map<int, vector<pair<int,double>>> v_set;
+    unordered_map<int, vector<pair<int,double>>>::iterator finder;
+
+    this->total_MAE1 = 0.0;
+    this->total_MAE2 = 0.0;
+    this->total_MAE3 = 0.0;
+    this->total_MAE4 = 0.0;
+    this->tmp_MAE = 0.0;
+
+    this->fold_num = ffold_num;
+    
+    vector<pair<int, int>> subsets;
+    this->get_subset_indexes(subsets);
+
+    for(int i = 0; i < fold_num; i++){
+        int s_start = subsets[i].first;
+        int s_end = subsets[i].second;
+        int s_total = s_end - s_start + 1;
+
+        for(int j = s_start; j < s_end; j++){
+            int usr_index = this->known_set[j]->usr_index;
+            int coin_index = this->known_set[j]->coin_index;
+            double val = this->known_set[j]->val;
+
+            int flag = users[usr_index]->reset_coin(coin_index);
+            if(flag == 0){
+                finder = v_set.find(usr_index);
+                if(finder != v_set.end())
+                    finder->second.push_back(pair<int, double>(coin_index, val));
+                else
+                    v_set[usr_index] = {pair<int, double>(coin_index, val)};
+            }
+            else{
+                int to_del = 0;
+                finder = v_set.find(usr_index);
+                if(finder == v_set.end()){
+                    to_del = 1;
+                }
+                else{
+                    to_del = finder->second.size() + 1;
+                    v_set.erase(finder);
+
+                }
+                s_total -= to_del; // if user turned to zero_vec, dont calculate it later in avg MAE
+
+            }
+        }
+
+
+            /* Place real users in dataset to be used in lsh */
+        fill_r_dataset();
+
+        /* Initialize lsh for placing real users in it */
+        init_lsh();
+
+        /* Fill lsh with real users */
+        fill_lsh(1);
+
+        /* Find 5 recomendations for all real users */ 
+        lsh_find_recs(1, *(this->r_dataset), v_set);
+
+        this->total_MAE1 += this->tmp_MAE / (double)s_total;
+
+        this->tmp_MAE = 0.0;
+
+        delete this->lsh;
+        this->lsh = NULL;
+
+        /* Place imaginary users in dataset to be used in lsh */
+        fill_i_dataset();
+
+        /*Initialize lsh for placing imaginary users in it */
+        init_lsh();
+
+        /* Fill lsh with imaginary users */
+        fill_lsh(2);
+
+        /* Find 2 recommendations for all real users */
+        lsh_find_recs(2, *(this->i_dataset), v_set);
+
+        this->total_MAE2 += this->tmp_MAE / (double)s_total;
+
+        this->tmp_MAE = 0.0;
+
+
+        delete this->lsh;
+        this->lsh = NULL;
+
+        init_cl_rec();
+
+        /* Place real users in dataset to be used in clustering */
+        this->cl_rec->fill_dataset(this->users, this->index_map, this->index_map2);
+        
+        /* Cluster real users */
+        cl_rec_clustering();
+
+        /* Find 5 recomendations for all real users */ 
+        cl_find_recs_real(v_set);
+
+        delete this->cl_rec;
+        this->cl_rec = NULL;
+        this->index_map.clear();
+        this->index_map2.clear();
+
+        this->total_MAE3 += this->tmp_MAE / (double)s_total;
+
+        this->tmp_MAE = 0.0;
+
+        init_cl_rec();
+
+        /* Place real users in dataset to be used in clustering */
+        this->cl_rec->fill_dataset(this->im_users, this->index_map, this->index_map2);
+
+        /* Cluster real users */
+        cl_rec_clustering();
+
+        /* Find 5 recomendations for all real users */ 
+        cl_find_recs_im(v_set);
+
+        this->total_MAE4 += this->tmp_MAE / (double)s_total;
+
+        this->tmp_MAE = 0.0;
+
+        delete this->cl_rec;
+        this->cl_rec = NULL;
+        this->index_map.clear();
+        this->index_map2.clear();
+
+        reset_coins(s_start, s_end);
+        v_set.clear();
+
+
+    }
+    this->total_MAE1 = this->total_MAE1 / (double)this->fold_num;
+    this->total_MAE2 = this->total_MAE2 / (double)this->fold_num;
+    this->total_MAE3 = this->total_MAE3 / (double)this->fold_num;
+    this->total_MAE4 = this->total_MAE4 / (double)this->fold_num;
+
+    cout << "MAE1 " << this->total_MAE1 << endl;
+    cout << "MAE2 " << this->total_MAE2 << endl;
+    cout << "MAE3 " << this->total_MAE3 << endl;
+    cout << "MAE4 " << this->total_MAE4 << endl;
+
+}
+
+
+void r_service::get_subset_indexes(vector<pair<int, int>>& subsets){
+    int num_of_known = this->known_set.size();
+
+    int pair_per_set = num_of_known / this->fold_num;
+    int remain = num_of_known % this->fold_num;
+
+
+    int s_start = 0;
+    int s_end = -1;
+    for(int i = 0; i < fold_num; i++){
+        s_start = s_end + 1;
+        s_end = s_start + pair_per_set - 1;
+        if(i < remain)
+            s_end++;
+
+        subsets.push_back(pair<int, int>(s_start, s_end));
+    }
+}
+
+void r_service::lsh_find_recs(int flag, dataset<double>& data, unordered_map<int, vector<pair<int,double>>>& v_set){
+    unordered_map<int, vector<pair<int,double>>>::iterator it;
+
+    for(it = v_set.begin(); it != v_set.end(); it++){
+        int usr_index = it->first;
+        vector<pair<int, double>>& coins_vals = it->second;
+        user* usr = users[usr_index]; // get current user 
+
+        /* Check if zero vector, so no recommendations */
+        if(usr->get_zero_vec() == 1){ // zero vec
+            continue;
+        }
+
+        /* Turn user to query in order to insert as query in lsh */
+        vector_item<double>& query = *(this->r_dataset->get_item(usr_index));
+        unordered_set<int> neighs; // all neighbours will be kept here
+
+        /* Get all neighbours in all tables */
+        this->lsh->get_neighbours(query, neighs);
+        
+        dist_func dist = &cs_distance;
+        /* Keep P nearest neighbours */
+        vector<int> p_nearest; // P nearest neighbours will be placed here
+        this->get_P_nearest(query, neighs, data, p_nearest, dist, 1);
+        
+        sim_func sim = &cs_similarity;
+
+        /* Having the p_nearest neighbours, find recommendations and print */
+        if(flag == 1)
+            this->calc_similarity(*usr, p_nearest, this->users, sim, coins_vals);   
+        else    
+            this->calc_similarity(*usr, p_nearest, this->im_users, sim, coins_vals);   
+
+    }
+}
+
+
+void r_service::calc_similarity(user& query, vector<int> neighbours, vector<user*>& data, sim_func& sim, vector<pair<int,double>>& coins_vals){
+
+    double q_avg = query.get_avg_sentiment(); // avg rating of user
+    vector<double> z; // sum of absolute of similarities
+    vector<double> sums_sim; // sum of similarites * rating
+
+    /* Initialize "rating" for cryptos */
+    for(unsigned int i = 0; i < this->cryptos.size(); i++){
+        z.push_back(0.0);
+        sums_sim.push_back(0.0);
+    }
+
+    /* Calculate similarity with all nn */
+    for(unsigned int i = 0; i < neighbours.size(); i++){
+        int n_index = neighbours[i];
+        user& cur_neighbour = *(data[n_index]); // get neighbour
+
+        /* Get similarity between query and neighbour */
+        double similarity = sim(query, cur_neighbour);
+
+        /* Get sentiments and avg rating of current neighbour */ 
+        vector<double>& n_sentiments = cur_neighbour.get_sentiments();
+        double n_avg = cur_neighbour.get_avg_sentiment(); // avg rating of neighbour
+
+        /* Get current rating for all unrated cryptos of user */
+        for(unsigned int j = 0; j < coins_vals.size(); j++){
+            int c_index = coins_vals[j].first; // get coin's index
+            /* Keep abs similarity for coin */
+            z[c_index] += abs(similarity);
+
+            /* Get similarity * (coin rating - avg rating) */
+            sums_sim[c_index] += similarity * (n_sentiments[c_index] - n_avg);
+        }
+    }
+
+    /* Calculate "rating" and sort all coins */
+    for(unsigned int i = 0; i < coins_vals.size(); i++){
+        int c_index = coins_vals[i].first;
+
+        if(z[c_index] == 0)
+            sums_sim[c_index] = q_avg;
+        else
+            sums_sim[c_index] = q_avg + ((double(1) / z[c_index]) * sums_sim[c_index]); // predicted rating
+        
+        double rating = coins_vals[i].second;
+
+        this->tmp_MAE += abs(rating - sums_sim[c_index]);
+
+    }
+
+}
+
+void r_service::reset_coins(int s_start, int s_end){
+    for(int i = s_start; i < s_end; i++){
+        int usr_index = this->known_set[i]->usr_index;
+        int coin_index = this->known_set[i]->coin_index;
+        double val = this->known_set[i]->val;
+
+        users[usr_index]->re_reset_coin(coin_index, val);
+    }
+}
+
+void r_service::cl_find_recs_real(unordered_map<int, vector<pair<int,double>>>& v_set){
+    unordered_map<int, vector<pair<int,double>>>::iterator it;    
+
+    vector<cluster_info*>& vectors_info = this->cl_rec->get_vectors_info();
+    dataset<double>& data = *(this->cl_rec->get_dataset());
+
+    /* Recommend to all users */
+    for(it = v_set.begin(); it != v_set.end(); it++){
+        int usr_index = it->first;
+        vector<pair<int, double>>& coins_vals = it->second;
+        user& usr = *(this->users[usr_index]); // get user
+
+        /* Check if zero vector, so no recommendations */
+        if(usr.get_zero_vec() == 1){ // zero vec
+            continue;
+        }
+
+        /* Get index of user in cluster dataset */
+        int data_index = this->index_map2[usr_index];
+
+        /* Get number of vector that user belongs to */
+        int cluster_num = vectors_info[data_index]->get_cluster_num();
+
+        vector_item<double>& query = *(data.get_item(data_index));
+        unordered_set<int> neighs; // all neighbours will be kept here
+
+        /* Get all neighbours in all tables */
+        this->cl_rec->get_neighbours(query, cluster_num, neighs);
+
+        dist_func dist = &eucl_distance;
+        /* Keep P nearest neighbours */
+        vector<int> p_nearest; // P nearest neighbours will be placed here
+        this->get_P_nearest(query, neighs, data, p_nearest, dist, 2);
+        
+        /* Having the p_nearest neighbours, find recommendations and print */
+        sim_func sim = &eucl_similarity;
+        this->calc_similarity(usr, p_nearest, this->users, sim, coins_vals);
+    }
+
+}
+
+
+void r_service::cl_find_recs_im(unordered_map<int, vector<pair<int,double>>>& v_set){
+    unordered_map<int, vector<pair<int,double>>>::iterator it;  
+
+    dataset<double>& data = *(this->cl_rec->get_dataset());
+
+    /* Recommend to all users */
+    for(it = v_set.begin(); it != v_set.end(); it++){
+        int usr_index = it->first;
+        vector<pair<int, double>>& coins_vals = it->second;
+        user& usr = *(this->users[usr_index]); // get user
+
+        /* Check if zero vector, so no recommendations */
+        if(usr.get_zero_vec() == 1){ // zero vec
+            continue;
+        }
+
+        vector_item<double> query(usr, -1);
+        unordered_set<int> neighs; // all neighbours will be kept here
+
+        int cluster_num = find_usr_cluster(query);
+
+        /* Get all neighbours in all tables */
+        this->cl_rec->get_neighbours(query, cluster_num, neighs);
+
+        dist_func dist = &eucl_distance;
+        /* Keep P nearest neighbours */
+        vector<int> p_nearest; // P nearest neighbours will be placed here
+        this->get_P_nearest(query, neighs, data, p_nearest, dist, 2);
+        
+        /* Having the p_nearest neighbours, find recommendations and print */
+        sim_func sim = &eucl_similarity;
+        this->calc_similarity(usr, p_nearest, this->im_users, sim, coins_vals);
+    }
+
 }

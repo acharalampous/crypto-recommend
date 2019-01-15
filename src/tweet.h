@@ -95,4 +95,7 @@ class user{
 
         /* Given the registered tweets and coins, evaluate the sentiment for all coins */
         void eval_sentiment(std::vector<tweet*>&, std::vector<cryptocurrency*>&);
+
+        int reset_coin(int);
+        void re_reset_coin(int, double);
 };

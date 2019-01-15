@@ -11,6 +11,7 @@
 using namespace std;
 
 int main(void){
+    srand(time(NULL));
     ifstream cc("files/coins_queries.csv");
     ifstream lxc("files/vader_lexicon.csv");
     ifstream tweets("files/tweets_dataset_small.csv");
@@ -30,9 +31,14 @@ int main(void){
 
     D = 100;
 
+    recsys->get_known_coins();
+    recsys->validation(10);
     
-    recsys->lsh_recommend();
-    recsys->cluster_recommend();
+    // recsys->lsh_recommend();
+    // recsys->cluster_recommend();
+
+
+
 
     cout << "Deleting Everything" << endl;
     delete recsys;

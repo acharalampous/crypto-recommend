@@ -259,3 +259,99 @@ void user::eval_sentiment(std::vector<tweet*>& tweets, std::vector<cryptocurrenc
 
     // cout << endl << endl;
 }
+
+int user::reset_coin(int index){
+    if(zero_vec == 1)
+        return -1;
+
+    double val = this->sentiments[index];
+    int c_rated = 0;
+
+    for(unsigned int i = 0; i < cryptos.size(); i++){
+        if(cryptos[i] == 1)
+            c_rated++;
+    }
+
+    /* Normalize avg_sentiment */
+    double tmp_avg = avg_sentiment * c_rated;
+    tmp_avg -= val;
+
+    this->cryptos[index] = 0; 
+
+    if(c_rated == 1){ // only this coin was rated
+        this->avg_sentiment = 0;
+        zero_vec = 1;
+        return -1;
+    }
+    else{
+        if(tmp_avg == 0.0)
+            this->avg_sentiment = 0.0;
+        else
+            this->avg_sentiment = tmp_avg / (double)(c_rated - 1);
+        
+        for(unsigned int i = 0; i < cryptos.size(); i++){
+            if(cryptos[i] == 0)
+                sentiments[i] = avg_sentiment;
+        }
+        
+    }
+
+    /* Check for zero_vec */
+    int flag = 0;
+    for(unsigned int i = 0; i < cryptos.size(); i++){
+        if(sentiments[i] != 0.0){
+            flag = 1;
+            break;
+        }
+    }
+
+    if(flag == 0){
+        zero_vec = 1;
+        return -1;
+    }
+
+    return 0;
+}
+
+void user::re_reset_coin(int index, double val){
+    int c_rated = 0;
+
+    /* Find number of coins that the user was referenced */
+    for(unsigned int i = 0; i < cryptos.size(); i++){
+        if(cryptos[i] == 1)
+            c_rated++;
+    }
+
+    /* Normalize avg_sentiment */
+    double tmp_avg = avg_sentiment * c_rated;
+    tmp_avg += val;
+    this->avg_sentiment = tmp_avg / (double)(c_rated + 1);
+
+    /* Reset coin's sentiment */
+    this->cryptos[index] = 1; 
+    this->sentiments[index] = val;
+
+
+    /* Set unrated coins as avg */
+    for(unsigned int i = 0; i < cryptos.size(); i++){
+        if(cryptos[i] == 0)
+            sentiments[i] = avg_sentiment;
+    }
+
+
+    /* Check for zero_vec */
+    int flag = 0;
+    for(unsigned int i = 0; i < cryptos.size(); i++){
+        if(sentiments[i] != 0.0){
+            flag = 1;
+            zero_vec = 0;
+            break;
+        }
+    }
+
+    if(flag == 0){
+        zero_vec = 1;
+    }
+
+    return;
+}

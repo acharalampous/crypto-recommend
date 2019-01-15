@@ -48,6 +48,12 @@ exe_args::exe_args(int type){
         config_file = CONF_FILE2;
 }
 
+val_pair::val_pair(int usr_index, int coin_index, double val){
+    this->usr_index = usr_index;
+    this->coin_index = coin_index;
+    this->val = val;
+}
+
 int get_parameters(int argc, char** argv, exe_args& pars){
     // for (int i = 1; i < argc; i += 2){ // get all parameters
             
