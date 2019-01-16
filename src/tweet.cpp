@@ -267,6 +267,7 @@ int user::reset_coin(int index){
     double val = this->sentiments[index];
     int c_rated = 0;
 
+    /* Find how many coins were rated from user */
     for(unsigned int i = 0; i < cryptos.size(); i++){
         if(cryptos[i] == 1)
             c_rated++;
@@ -276,6 +277,7 @@ int user::reset_coin(int index){
     double tmp_avg = avg_sentiment * c_rated;
     tmp_avg -= val;
 
+    /* Set coin as unrated */
     this->cryptos[index] = 0; 
 
     if(c_rated == 1){ // only this coin was rated

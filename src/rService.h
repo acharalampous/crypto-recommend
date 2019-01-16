@@ -131,7 +131,7 @@ class r_service{
 
         /***** Problem 1 *****/
 
-        /* Problem 1 - Using LSH find 5 recommendations for all users */
+        /* Problem 1 - Using LSH find 5&2 recommendations for all users */
         void lsh_recommend();
 
         /* Place all real users' sentiment score in dataset as vector */
@@ -158,34 +158,56 @@ class r_service{
         void calc_similarity(user&, std::vector<int>, std::vector<user*>&, int, sim_func&);
 
 
+
         /***** Problem 2 *****/
 
+        /* Problem 2 - Using Clustering find 5&2 recommendations for all users */
         void cluster_recommend();
 
+        /* Initialize cluster with settings found in cluste2.conf */
         int init_cl_rec();
     
+        /* Execute clustering sequence. In the end clusters are made */
         void cl_rec_clustering();
 
+        /* Find recommendations using the clusters made on real users */
         void cl_find_recs_real();
 
+        /* Find recommendations using the clusters made on imaginary users */        
         void cl_find_recs_im();
 
-        int find_usr_cluster(vector_item<double>& );
+        /* Given a vector_item, find its nearest centroid and return number of cluster */
+        int find_usr_cluster(vector_item<double>&);
+
+
 
         /***** Validation *****/
+
         /* Gather from all users, all the known coins values. Fill known_set with pairs of usr-coin and value */
         void get_known_coins();
 
+        /* Given the f-fold num, perform f-fold cross validation on the 2 algorithms for both problems */
         void validation(int);
 
+        void val_lsh_A(std::unordered_map<int, std::vector<std::pair<int,double>>>&, int);
+        void val_lsh_B(std::unordered_map<int, std::vector<std::pair<int,double>>>&, int);
+        void val_cl_A(std::unordered_map<int, std::vector<std::pair<int,double>>>&, int);
+        void val_cl_B(std::unordered_map<int, std::vector<std::pair<int,double>>>&, int);
+
+
+        /* Divide the known_set(that contains pairs <usr-coins>) to f equal subsets */ 
         void get_subset_indexes(std::vector<std::pair<int, int>>&);
 
+        /* Calculate rating for given pairs of user-coins and find MAE */
         void lsh_find_recs(int, dataset<double>&, std::unordered_map<int, std::vector<std::pair<int,double>>>&);
 
-        void calc_similarity(user&, std::vector<int>, std::vector<user*>&, sim_func&, std::vector<std::pair<int,double>>&);
+        /* Given the user, validation set, its nn and similarity function calculate MAE */ 
+        void calc_similarity_mae(user&, std::vector<int>, std::vector<user*>&, sim_func&, std::vector<std::pair<int,double>>&);
 
+        /* Given the start and end index of the known_set reset coins to their true value */
         void reset_coins(int, int);
 
+        /* Calculate rating for given pairs of user-coins and find MAE */
         void cl_find_recs_real(std::unordered_map<int, std::vector<std::pair<int,double>>>&);
         void cl_find_recs_im(std::unordered_map<int, std::vector<std::pair<int,double>>>&);
 

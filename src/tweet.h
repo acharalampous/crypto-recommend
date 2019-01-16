@@ -96,6 +96,9 @@ class user{
         /* Given the registered tweets and coins, evaluate the sentiment for all coins */
         void eval_sentiment(std::vector<tweet*>&, std::vector<cryptocurrency*>&);
 
+        /* Given the index of coin, set coin as unrated and recalculate avg sentiments */
         int reset_coin(int);
+
+        /* Given the index and value of coin, set coin as rated and recalculate avg sentiments */ 
         void re_reset_coin(int, double);
 };

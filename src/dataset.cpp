@@ -86,7 +86,6 @@ vector_item<T>::vector_item(string& new_vector, int index){
 
 template <class T>
 vector_item<T>::vector_item(user& usr){
-    //cout << "Ddd = " << D << endl;
     /* Set index = user index in dataset */
     this->index = usr.get_index();
 
@@ -105,14 +104,10 @@ vector_item<T>::vector_item(user& usr){
     vector<double>& sentiments = usr.get_sentiments();
     for(int i = 0; i < D; i++)
         this->coordinates.push_back(sentiments[i]);
-
-
-    //cout << coordinates.size() << endl;
 }
 
 template <class T>
 vector_item<T>::vector_item(user& usr, int index){
-    //cout << "Ddd = " << D << endl;
     /* Set index = user index in dataset */
     this->index = index;
 
@@ -131,9 +126,6 @@ vector_item<T>::vector_item(user& usr, int index){
     vector<double>& sentiments = usr.get_sentiments();
     for(int i = 0; i < D; i++)
         this->coordinates.push_back(sentiments[i]);
-
-
-    //cout << coordinates.size() << endl;
 }
 
 /* Create empty vector_item */

@@ -296,9 +296,9 @@ int r_service::cluster_tweets(){
     int assign = parameters.assign;
     int upd = parameters.upd;
     
-    print_exe_details(parameters);
+    //print_exe_details(parameters);
     this->cl_manage = new cl_management<double>(parameters, init, assign, upd);   
-    this->cl_manage->clustering(parameters, init, assign, upd);    
+    this->cl_manage->clustering(parameters, init, assign, upd, 1);    
 
     return 0;
 }
@@ -352,42 +352,51 @@ void r_service::eval_im_users(){
 
 void r_service::lsh_recommend(){
 
-    this->out << "1. LSH-COSINE Recommendation - Problem A" << endl;
-    this->out << "----------------------------------------" << endl;
-
+    this->out << "1. LSH-COSINE Recommendation" << endl << "\tProblem A" << endl;
+    cout << "=";
+    cout.flush();
     /* Place real users in dataset to be used in lsh */
     fill_r_dataset();
-    
+    cout << "=";
+    cout.flush();
+
     /* Initialize lsh for placing real users in it */
     init_lsh();
-    
+    cout << "=";
+    cout.flush();
+
     /* Fill lsh with real users */
     fill_lsh(1);
+    cout << "=";
+    cout.flush();
 
     /* Find 5 recomendations for all real users */ 
     lsh_find_recs(5, *(this->r_dataset));
-
+    cout << "=";
+    cout.flush();
     delete this->lsh;
     this->lsh = NULL;
     
 ////////////////////////////////////////////////////////////
-    this->out << endl << endl << "==========================================" << endl << endl; 
-    this->out << "1. LSH-COSINE Recommendation - Problem B" << endl;
-    this->out << "----------------------------------------" << endl;
+    this->out << endl << endl; 
+    this->out << "\tProblem B" << endl << endl;
 
     /* Place imaginary users in dataset to be used in lsh */
     fill_i_dataset();
-
+    cout << "=";
+    cout.flush();
     /*Initialize lsh for placing imaginary users in it */
     init_lsh();
-
+    cout << "=";
+    cout.flush();
     /* Fill lsh with imaginary users */
     fill_lsh(2);
-
+    cout << "=";
+    cout.flush();
     /* Find 2 recommendations for all real users */
     lsh_find_recs(2, *(this->i_dataset));
-
-    this->out << endl << endl << "==========================================" << endl << endl; 
+    cout << "=";
+    cout.flush();
     this->out << endl << endl << "==========================================" << endl << endl; 
 
 }
@@ -642,40 +651,45 @@ void r_service::calc_similarity(user& query, vector<int> neighbours, vector<user
 void r_service::cluster_recommend(){
     
     init_cl_rec();
-
-    this->out << "2. Clustering Recommendation - Problem A" << endl;
-    this->out << "----------------------------------------" << endl;
+    cout << "=";
+    cout.flush();
+    this->out << "2. Clustering Recommendation" << endl <<"\tProblem A" << endl;
 
     /* Place real users in dataset to be used in clustering */
     this->cl_rec->fill_dataset(this->users, this->index_map, this->index_map2);
     
     /* Cluster real users */
     cl_rec_clustering();
-
+    cout << "=";
+    cout.flush();
     /* Find 5 recomendations for all real users */ 
     cl_find_recs_real();
-
+    cout << "=";
+    cout.flush();
     delete this->cl_rec;
     this->cl_rec = NULL;
     this->index_map.clear();
     this->index_map2.clear();
-    // /////////////////////////////////////////////////
     
-    this->out << endl << endl << "==========================================" << endl << endl; 
-
-    this->out << "2. Clustering Recommendation- Problem B" << endl;
-    this->out << "---------------------------------------" << endl;
-
+    /////////////////////////////////////////////////////
+    
+    this->out << endl << endl; 
+    this->out << "\tProblem B" << endl << endl;
+    
     init_cl_rec();
-
+    cout << "=";
+    cout.flush();
     /* Place real users in dataset to be used in clustering */
     this->cl_rec->fill_dataset(this->im_users, this->index_map, this->index_map2);
     
     /* Cluster real users */
     cl_rec_clustering();
-
+    cout << "=";
+    cout.flush();
     /* Find 5 recomendations for all real users */ 
     cl_find_recs_im();
+    cout << "=";
+    cout.flush();
 }
 
 int r_service::init_cl_rec(){
@@ -890,89 +904,25 @@ void r_service::validation(int ffold_num){
             }
         }
 
-
-            /* Place real users in dataset to be used in lsh */
-        fill_r_dataset();
-
-        /* Initialize lsh for placing real users in it */
-        init_lsh();
-
-        /* Fill lsh with real users */
-        fill_lsh(1);
-
-        /* Find 5 recomendations for all real users */ 
-        lsh_find_recs(1, *(this->r_dataset), v_set);
-
-        this->total_MAE1 += this->tmp_MAE / (double)s_total;
-
-        this->tmp_MAE = 0.0;
-
-        delete this->lsh;
-        this->lsh = NULL;
-
-        /* Place imaginary users in dataset to be used in lsh */
-        fill_i_dataset();
-
-        /*Initialize lsh for placing imaginary users in it */
-        init_lsh();
-
-        /* Fill lsh with imaginary users */
-        fill_lsh(2);
-
-        /* Find 2 recommendations for all real users */
-        lsh_find_recs(2, *(this->i_dataset), v_set);
-
-        this->total_MAE2 += this->tmp_MAE / (double)s_total;
-
-        this->tmp_MAE = 0.0;
-
-
-        delete this->lsh;
-        this->lsh = NULL;
-
-        init_cl_rec();
-
-        /* Place real users in dataset to be used in clustering */
-        this->cl_rec->fill_dataset(this->users, this->index_map, this->index_map2);
+        /* Evaluate validation for 1A */
+        this->val_lsh_A(v_set, s_total);
         
-        /* Cluster real users */
-        cl_rec_clustering();
+        /* Evaluate validation for 1B */
+        this->val_lsh_B(v_set, s_total);
 
-        /* Find 5 recomendations for all real users */ 
-        cl_find_recs_real(v_set);
+        /* Evaluate validation for 2A */
+        this->val_cl_A(v_set, s_total);
 
-        delete this->cl_rec;
-        this->cl_rec = NULL;
-        this->index_map.clear();
-        this->index_map2.clear();
+        /* Evaluate validation for 2B */
+        this->val_cl_B(v_set, s_total);
 
-        this->total_MAE3 += this->tmp_MAE / (double)s_total;
 
-        this->tmp_MAE = 0.0;
-
-        init_cl_rec();
-
-        /* Place real users in dataset to be used in clustering */
-        this->cl_rec->fill_dataset(this->im_users, this->index_map, this->index_map2);
-
-        /* Cluster real users */
-        cl_rec_clustering();
-
-        /* Find 5 recomendations for all real users */ 
-        cl_find_recs_im(v_set);
-
-        this->total_MAE4 += this->tmp_MAE / (double)s_total;
-
-        this->tmp_MAE = 0.0;
-
-        delete this->cl_rec;
-        this->cl_rec = NULL;
-        this->index_map.clear();
-        this->index_map2.clear();
-
+        /* Reset coins and move to the next subset */
         reset_coins(s_start, s_end);
         v_set.clear();
 
+        cout << "=";
+        cout.flush();
 
     }
     this->total_MAE1 = this->total_MAE1 / (double)this->fold_num;
@@ -980,11 +930,99 @@ void r_service::validation(int ffold_num){
     this->total_MAE3 = this->total_MAE3 / (double)this->fold_num;
     this->total_MAE4 = this->total_MAE4 / (double)this->fold_num;
 
-    cout << "MAE1 " << this->total_MAE1 << endl;
-    cout << "MAE2 " << this->total_MAE2 << endl;
-    cout << "MAE3 " << this->total_MAE3 << endl;
-    cout << "MAE4 " << this->total_MAE4 << endl;
+    this->out << "Cosine LSH Recommendation - Problem A: " << this->total_MAE1 << endl;
+    this->out << "Cosine LSH Recommendation - Problem B: " << this->total_MAE2 << endl;
+    this->out << "Clustering Recommendtaion - Problem A: " << this->total_MAE3 << endl;
+    this->out << "Clustering Recommendtaion - Problem B: " << this->total_MAE4 << endl;
 
+
+}
+
+void r_service::val_lsh_A(unordered_map<int, vector<pair<int,double>>>& v_set, int s_total){
+     /* Place real users in dataset to be used in lsh */
+    fill_r_dataset();
+
+    /* Initialize lsh for placing real users in it */
+    init_lsh();
+
+    /* Fill lsh with real users */
+    fill_lsh(1);
+
+    /* Find 5 recomendations for all real users */ 
+    lsh_find_recs(1, *(this->r_dataset), v_set);
+
+    this->total_MAE1 += this->tmp_MAE / (double)s_total;
+
+    this->tmp_MAE = 0.0;
+
+    delete this->lsh;
+    this->lsh = NULL;
+}
+
+void r_service::val_lsh_B(unordered_map<int, vector<pair<int,double>>>& v_set, int s_total){
+    /* Place imaginary users in dataset to be used in lsh */
+    fill_i_dataset();
+
+    /*Initialize lsh for placing imaginary users in it */
+    init_lsh();
+
+    /* Fill lsh with imaginary users */
+    fill_lsh(2);
+
+    /* Find 2 recommendations for all real users */
+    lsh_find_recs(2, *(this->i_dataset), v_set);
+
+    this->total_MAE2 += this->tmp_MAE / (double)s_total;
+
+    this->tmp_MAE = 0.0;
+
+    delete this->lsh;
+    this->lsh = NULL;
+}
+
+void r_service::val_cl_A(unordered_map<int, vector<pair<int,double>>>& v_set, int s_total){
+    init_cl_rec();
+
+    /* Place real users in dataset to be used in clustering */
+    this->cl_rec->fill_dataset(this->users, this->index_map, this->index_map2);
+    
+    /* Cluster real users */
+    cl_rec_clustering();
+
+    /* Find 5 recomendations for all real users */ 
+    cl_find_recs_real(v_set);
+
+    delete this->cl_rec;
+    this->cl_rec = NULL;
+    this->index_map.clear();
+    this->index_map2.clear();
+
+    this->total_MAE3 += this->tmp_MAE / (double)s_total;
+
+    this->tmp_MAE = 0.0;
+}
+
+
+void r_service::val_cl_B(unordered_map<int, vector<pair<int,double>>>& v_set, int s_total){
+    init_cl_rec();
+
+    /* Place real users in dataset to be used in clustering */
+    this->cl_rec->fill_dataset(this->im_users, this->index_map, this->index_map2);
+
+    /* Cluster real users */
+    cl_rec_clustering();
+
+    /* Find 5 recomendations for all real users */ 
+    cl_find_recs_im(v_set);
+
+    this->total_MAE4 += this->tmp_MAE / (double)s_total;
+
+    this->tmp_MAE = 0.0;
+
+    delete this->cl_rec;
+    this->cl_rec = NULL;
+    this->index_map.clear();
+    this->index_map2.clear();
 }
 
 
@@ -1036,15 +1074,15 @@ void r_service::lsh_find_recs(int flag, dataset<double>& data, unordered_map<int
 
         /* Having the p_nearest neighbours, find recommendations and print */
         if(flag == 1)
-            this->calc_similarity(*usr, p_nearest, this->users, sim, coins_vals);   
+            this->calc_similarity_mae(*usr, p_nearest, this->users, sim, coins_vals);   
         else    
-            this->calc_similarity(*usr, p_nearest, this->im_users, sim, coins_vals);   
+            this->calc_similarity_mae(*usr, p_nearest, this->im_users, sim, coins_vals);   
 
     }
 }
 
 
-void r_service::calc_similarity(user& query, vector<int> neighbours, vector<user*>& data, sim_func& sim, vector<pair<int,double>>& coins_vals){
+void r_service::calc_similarity_mae(user& query, vector<int> neighbours, vector<user*>& data, sim_func& sim, vector<pair<int,double>>& coins_vals){
 
     double q_avg = query.get_avg_sentiment(); // avg rating of user
     vector<double> z; // sum of absolute of similarities
@@ -1142,7 +1180,7 @@ void r_service::cl_find_recs_real(unordered_map<int, vector<pair<int,double>>>& 
         
         /* Having the p_nearest neighbours, find recommendations and print */
         sim_func sim = &eucl_similarity;
-        this->calc_similarity(usr, p_nearest, this->users, sim, coins_vals);
+        this->calc_similarity_mae(usr, p_nearest, this->users, sim, coins_vals);
     }
 
 }
@@ -1179,7 +1217,7 @@ void r_service::cl_find_recs_im(unordered_map<int, vector<pair<int,double>>>& v_
         
         /* Having the p_nearest neighbours, find recommendations and print */
         sim_func sim = &eucl_similarity;
-        this->calc_similarity(usr, p_nearest, this->im_users, sim, coins_vals);
+        this->calc_similarity_mae(usr, p_nearest, this->im_users, sim, coins_vals);
     }
 
 }

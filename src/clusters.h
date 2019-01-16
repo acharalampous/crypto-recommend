@@ -136,6 +136,7 @@ class cl_management{
         ~cl_management();
 
         void clustering(exe_args&, int, int, int);
+        void clustering(exe_args&, int, int, int, int);
 
         /* Given a file stream, get all vectors and assign in dataset */
         void fill_dataset(std::ifstream&);
@@ -167,7 +168,9 @@ class cl_management{
         void print();
         void print_to_file(std::ofstream&);
 
+        /* Given a vector and a cluster index, find and return neighbours */
         void get_neighbours(vector_item<double>&, int, std::unordered_set<int>&);
 
+        /* Given a vector, find its nearest cluster and return its num */
         int nearest_cl(vector_item<double>&);
 };

@@ -183,6 +183,7 @@ class csimilarity{
         /* Given a query vector, finds the nearest neighbours */ 
         void findANN(vector_item<T>&, float, float&, std::string&, std::ofstream&, std::unordered_set<std::string>&);
 
+        /* Find neighbours of given vector, in cosine table and return */
         void get_neighbours(vector_item<T>&, std::unordered_set<int>&);
 
         /* Returns the value of the hash function given for the provided vector */

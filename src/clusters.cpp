@@ -408,17 +408,17 @@ void cl_management<T>::clustering(exe_args& parameters, int init, int assign, in
     /* Open input file */
     ifstream input(parameters.input_file);
     this->fill_dataset(input);
-    cout << "Dataset is created." << endl;
+    //cout << "Dataset is created." << endl;
 
-    cout << "Initializing Clusters..." << endl;
+    // cout << "Initializing Clusters..." << endl;
     this->init_clusters();
-    cout << "Clusters were Initialized." << endl;
+    // cout << "Clusters were Initialized." << endl;
 
-    cout << "Assigning to Clusters for the first time..." << endl;
+    // cout << "Assigning to Clusters for the first time..." << endl;
     this->assign_clusters();
-    cout << "Done assigning to Clusters." << endl;
+    // cout << "Done assigning to Clusters." << endl;
 
-    cout << "Updating - Assigning until convergence..." << endl;
+    // cout << "Updating - Assigning until convergence..." << endl;
     
     int made_changes = 1;
     while(1){
@@ -428,7 +428,45 @@ void cl_management<T>::clustering(exe_args& parameters, int init, int assign, in
         this->assign_clusters();
         i++;
     }
-    cout << "-------------------------------------------------------------------------\n" << endl;
+    // cout << "-------------------------------------------------------------------------\n" << endl;
+}
+
+template <class T>
+void cl_management<T>::clustering(exe_args& parameters, int init, int assign, int upd, int flag){
+    int i = 0;
+
+    cout << "=";
+    cout.flush();
+    /* Open input file */
+    ifstream input(parameters.input_file);
+    this->fill_dataset(input);
+    //cout << "Dataset is created." << endl;
+    cout << "=";
+    cout.flush();
+    // cout << "Initializing Clusters..." << endl;
+    this->init_clusters();
+    // cout << "Clusters were Initialized." << endl;
+    cout << "=";
+    cout.flush();
+    // cout << "Assigning to Clusters for the first time..." << endl;
+    this->assign_clusters();
+    cout << "=";
+    cout.flush();
+    // cout << "Done assigning to Clusters." << endl;
+
+    // cout << "Updating - Assigning until convergence..." << endl;
+    
+    int made_changes = 1;
+    while(1){
+        if(made_changes == 0 || i >= this->max_updates)
+            break;
+        made_changes = this->update_clusters();
+        this->assign_clusters();
+        i++;
+        cout << "=";
+        cout.flush();
+    }
+    // cout << "-------------------------------------------------------------------------\n" << endl;
 }
 
 template <class T>
@@ -692,7 +730,7 @@ template <class T>
 void cl_management<T>::get_neighbours(vector_item<double>& query, int cluster_num, unordered_set<int>& neighs){
     int self_index = query.get_index();
 
-	/* Get cluster that query belongs to */
+	/* Get cluster with given cluster num */
 	cluster<T>& cl = *(this->clusters[cluster_num]);
 
     /* Get all vectors in cluster */
